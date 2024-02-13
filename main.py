@@ -9,15 +9,23 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Literal, Tuple
 import tkinter as tk
-from tkinter import ttk
-from tkinter import filedialog
+from tkinter import messagebox, simpledialog, ttk, filedialog
 
 from ttkthemes import ThemedStyle
 from PIL import ImageTk, Image
 
+from utils.json_utils import (
+    load_last_used_settings,
+    save_last_used_settings,
+    load_translations,
+)
 from utils.window_utils import center_window
 from utils.ffmpeg_utils import check, configure
 from video_adjuster import is_video_or_audio_file, VideoAdjuster
+
+
+# Load translations
+translations = load_translations()
 
 
 class App(ABC):
@@ -27,19 +35,22 @@ class App(ABC):
     It initializes the GUI window and sets up various elements within the window.
     """
 
-    def __init__(self, title: str, master: tk.Tk | None = None) -> None:
+    def __init__(
+        self,
+        title: str,
+        language: Literal["pt_BR", "en_US"] = load_last_used_settings()[0],
+    ) -> None:
         """
         Constructor method for initializing the GUI window and setting
         up various elements within the window.
         """
+        self.language = language
+        self.json_translations = translations[self.language]
 
-        if master:
-            self.root = tk.Toplevel(master=master)
-        else:
-            self.root = tk.Tk()
+        self.root = tk.Tk()
 
         self.style = ThemedStyle(self.root)
-        self.style.set_theme("black")
+        self.style.set_theme(load_last_used_settings()[1])
         self.root.configure(bg=self.style.lookup("TLabel", "background"))
         self.root.title(title)
         self.root.resizable(False, False)
@@ -67,6 +78,7 @@ class App(ABC):
         """
         Abstract method to create the menu bar, to change between apps.
         """
+        json_menu = self.json_translations["Menu"]
 
         menu_bar = tk.Menu(
             self.root,
@@ -79,15 +91,30 @@ class App(ABC):
         theme_menu = tk.Menu(tearoff=0)
 
         theme_menu.add_command(
-            label="Modo Claro",
+            label=json_menu["theme_menu_light_mode"],
             command=lambda: self._change_theme("default"),
         )
+
         theme_menu.add_command(
-            label="Modo Escuro",
+            label=json_menu["theme_menu_dark_mode"],
             command=lambda: self._change_theme("black"),
         )
 
-        menu_bar.add_cascade(label="Tema", menu=theme_menu)
+        menu_bar.add_cascade(label=json_menu["theme_menu_name"], menu=theme_menu)
+
+        language_menu = tk.Menu(tearoff=0)
+
+        language_menu.add_command(
+            label=json_menu["language_menu_portuguese"],
+            command=lambda: self._change_language("pt_BR"),
+        )
+
+        language_menu.add_command(
+            label=json_menu["language_menu_english"],
+            command=lambda: self._change_language("en_US"),
+        )
+
+        menu_bar.add_cascade(label=json_menu["language_menu_name"], menu=language_menu)
 
         self.root.config(menu=menu_bar)
 
@@ -97,6 +124,9 @@ class App(ABC):
         """
         Changes the theme of the application.
         """
+        if theme == load_last_used_settings()[1]:
+            return
+
         # print(self.style.get_themes())
 
         self.style.set_theme(theme)
@@ -104,13 +134,39 @@ class App(ABC):
 
         center_window(self.root)
 
+        # update user settings
+        save_last_used_settings("last_used_theme", theme=theme)
+
+    def _change_language(
+        self, language: Literal["pt_BR", "en_US"] = load_last_used_settings()[0]
+    ) -> None:
+        """
+        Changes the language of the application.
+
+        :param language Literal["pt_BR", "en_US"]: Defaults to the last used language.
+
+        :return: None.
+        """
+
+        if language == load_last_used_settings()[0]:
+            return
+
+        self.json_translations = translations[language]
+
+        # update user settings
+        save_last_used_settings("last_used_language", language=language)
+
+        self.root.destroy()
+        self.__init__(language=language)  # type: ignore
+
     def create_input_folder_entry(self) -> None:
         """
         Creates input folder entry and associated label and button.
         """
+        json_widgets = self.json_translations["Widgets"]
 
         input_folder_label = ttk.Label(
-            self.root, text="Pasta dos arquivos:", justify="left"
+            self.root, text=json_widgets["input_folder_label"], justify="left"
         )
         input_folder_label.grid(row=0, column=0, padx=5, pady=5)
 
@@ -119,7 +175,7 @@ class App(ABC):
 
         browse_input_button = ttk.Button(
             self.root,
-            text="Procurar",
+            text=json_widgets["browse_input_button"],
         )
         browse_input_button.grid(row=0, column=2, padx=5, pady=5)
         browse_input_button.bind(
@@ -139,6 +195,8 @@ class App(ABC):
         """
         Creates a treeview to display the files in the input folder.
         """
+        json_widgets = self.json_translations["Widgets"]
+
         self.treeview.delete(*self.treeview.get_children())
 
         self.treeview.tag_configure("checked", image=self.checked_image)
@@ -150,7 +208,7 @@ class App(ABC):
             "#0", width=50, minwidth=50, anchor="center", stretch=False
         )
 
-        self.treeview.heading("#1", text="Nome Arquivo")
+        self.treeview.heading("#1", text=json_widgets["treeview_column1"])
 
         for file in files:
             name = file.name
@@ -194,7 +252,15 @@ class App(ABC):
 
         :return: list[Path] | None
         """
+        json_messagebox = self.json_translations["MessageBox"]
+
         if not self.treeview.get_children():
+            messagebox.showwarning(
+                json_messagebox["warning"],
+                message=json_messagebox["error_treeview_files_not_found"]
+                + "\n"
+                + json_messagebox["verify_button_not_clicked"],
+            )
             return None
 
         input_folder = Path(self.input_folder_entry.get())
@@ -222,12 +288,22 @@ class VideoConverterApp(App):
     converting video and audio files using ffmpeg.
     """
 
-    def __init__(self) -> None:
+    def __init__(
+        self, language: Literal["pt_BR", "en_US"] = load_last_used_settings()[0]
+    ) -> None:
         """
         Constructor method for initializing the GUI window and setting
         up various elements within the window.
         """
-        super().__init__("Conversor de Videos e Audios")
+        self.json_translations = translations[language]
+        self.json_video_converter_app = self.json_translations[
+            "Video and Audio Converter"
+        ]
+
+        super().__init__(
+            self.json_video_converter_app["VideoConverterApp_title"],
+            language=language,
+        )
 
         self.create_output_folder_entry()
 
@@ -246,10 +322,13 @@ class VideoConverterApp(App):
         """
         Creates and configures the menu bar to change between apps.
         """
+
         menu_bar, app_menu = super().create_menu_bar()
 
         app_menu.add_command(
-            label="Mudar atributos de vídeos",
+            label=self.json_translations["Change Video Attributes"][
+                "ChangeVideoAttributesApp_title"
+            ],
             command=self.open_change_video_title_app,
         )
 
@@ -259,21 +338,27 @@ class VideoConverterApp(App):
         """
         Opens the ChangeVideoTitleApp.
         """
-        app = ChangeVideoAttributesApp(self.root)  # type: ignore
+        # Destroy this window
+        self.root.destroy()
 
-        # Hide the main window
-        self.root.withdraw()
+        app = ChangeVideoAttributesApp()
 
         # Show the ChangeVideoTitleApp
         app.root.mainloop()
+
+        # Show the main window above everything
+        app.root.lift()
+
+        app.root.focus()
 
     def create_output_folder_entry(self) -> None:
         """
         Create output folder entry widgets and place them in the root window.
         """
+        json_widgets = self.json_translations["Widgets"]
 
         output_folder_label = ttk.Label(
-            self.root, text="Pasta de destino:", justify="left"
+            self.root, text=json_widgets["output_folder_label"], justify="left"
         )
         output_folder_label.grid(row=1, column=0, padx=5, pady=5)
 
@@ -282,7 +367,7 @@ class VideoConverterApp(App):
 
         browse_output_button = ttk.Button(
             self.root,
-            text="Procurar",
+            text=json_widgets["browse_output_button"],
         )
         browse_output_button.grid(row=1, column=2, padx=5, pady=5)
         browse_output_button.bind(
@@ -293,8 +378,10 @@ class VideoConverterApp(App):
         """
         Creates an input extension entry and label in the GUI.
         """
-
-        input_extension_label = ttk.Label(self.root, text="Extensão procurada:")
+        input_extension_label = ttk.Label(
+            self.root,
+            text=self.json_video_converter_app["input_extension_label"],
+        )
         input_extension_label.grid(row=2, column=0, padx=5, pady=5)
 
         self.input_extension_entry = tk.Entry(self.root, width=50)
@@ -307,7 +394,9 @@ class VideoConverterApp(App):
         """
 
         output_extension_label = ttk.Label(
-            self.root, text="Extensão desejada:", justify="left"
+            self.root,
+            text=self.json_video_converter_app["output_extension_label"],
+            justify="left",
         )
         output_extension_label.grid(row=3, column=0, padx=5, pady=5)
 
@@ -321,7 +410,9 @@ class VideoConverterApp(App):
         """
 
         conversion_type_label = ttk.Label(
-            self.root, text="Tipo de conversão:", justify="left"
+            self.root,
+            text=self.json_video_converter_app["conversion_type_label"],
+            justify="left",
         )
         conversion_type_label.grid(row=4, column=0, padx=5, pady=5)
 
@@ -339,8 +430,12 @@ class VideoConverterApp(App):
 
     def create_verify_files_button(self) -> None:
         """Create a button to verify the files in the input folder."""
+        json_widgets = self.json_translations["Widgets"]
+
         verify_files_button = ttk.Button(
-            self.root, text="Verificar arquivos", command=self.verify_files
+            self.root,
+            text=json_widgets["verify_files_button"],
+            command=self.verify_files,
         )
         verify_files_button.grid(row=5, column=1, padx=5, pady=5, sticky="w")
 
@@ -350,7 +445,9 @@ class VideoConverterApp(App):
         """
 
         convert_button = ttk.Button(
-            self.root, text="Converter", command=self.convert_file
+            self.root,
+            text=self.json_video_converter_app["convert_button"],
+            command=self.convert_file,
         )
         convert_button.grid(row=5, column=1, padx=5, pady=5, sticky="e")
 
@@ -429,16 +526,21 @@ class ChangeVideoAttributesApp(App):
     changing the title of video file to its filename.
     """
 
-    def __init__(self, master: tk.Tk) -> None:
+    def __init__(
+        self, language: Literal["pt_BR", "en_US"] = load_last_used_settings()[0]
+    ) -> None:
         """
         Constructor method for initializing the GUI window and setting
         up various elements within the window.
         """
-        self.master = master
+        self.json_translations = translations[language]
+        self.json_change_video_attributes_app = self.json_translations[
+            "Change Video Attributes"
+        ]
 
         super().__init__(
-            "Mudar atributos de vídeos",
-            master=self.master,
+            self.json_change_video_attributes_app["ChangeVideoAttributesApp_title"],
+            language=language,
         )
 
         self.create_verify_files_button()
@@ -458,7 +560,9 @@ class ChangeVideoAttributesApp(App):
         menu_bar, app_menu = super().create_menu_bar()
 
         app_menu.add_command(
-            label="Converter Videos e audios",
+            label=self.json_translations["Change Video Attributes"][
+                "ChangeVideoAttributesApp_title"
+            ],
             command=self.open_video_converter_app,
         )
 
@@ -468,26 +572,18 @@ class ChangeVideoAttributesApp(App):
         """
         Opens a new window that allows the user to convert video files.
         """
-        self.master.deiconify()
+        # Destroy this window
         self.root.destroy()
 
-    def create_input_folder_entry(self) -> None:
-        """
-        Creates folder entry and associated label and button.
-        """
+        app = VideoConverterApp()
 
-        folder_label = ttk.Label(self.root, text="Pasta dos arquivos:", justify="left")
-        folder_label.grid(row=0, column=0, padx=5, pady=5)
+        # Show the ChangeVideoTitleApp
+        app.root.mainloop()
 
-        self.input_folder_entry = ttk.Entry(self.root, width=50)
-        self.input_folder_entry.grid(row=0, column=1, padx=5, pady=5)
+        # Show the main window above everything
+        app.root.lift()
 
-        browse_input_button = ttk.Button(
-            self.root,
-            text="Procurar",
-            command=lambda: self.browse_folder(self.input_folder_entry),
-        )
-        browse_input_button.grid(row=0, column=2, padx=5, pady=5)
+        app.root.focus()
 
     def create_verify_files_button(self):
         """
@@ -495,8 +591,11 @@ class ChangeVideoAttributesApp(App):
         and updates the treeview with the input files. Returns True if successful,
         or None if the input folder or extension entries are empty.
         """
+        json_widgets = self.json_translations["Widgets"]
         verify_files_button = ttk.Button(
-            self.root, text="Verificar arquivos", command=self.verify_files
+            self.root,
+            text=json_widgets["verify_files_button"],
+            command=self.verify_files,
         )
         verify_files_button.grid(row=5, column=0, padx=5, pady=5, sticky="w")
 
@@ -506,7 +605,9 @@ class ChangeVideoAttributesApp(App):
         """
 
         change_button = ttk.Button(
-            self.root, text="Mudar título", command=self.change_title
+            self.root,
+            text=self.json_change_video_attributes_app["change_button"],
+            command=self.change_title,
         )
         change_button.grid(row=5, column=1, sticky="w", padx=5, pady=5)
 
@@ -516,7 +617,7 @@ class ChangeVideoAttributesApp(App):
         """
         merge_button = ttk.Button(
             self.root,
-            text="Juntar vídeo com legenda",
+            text=self.json_change_video_attributes_app["merge_button"],
             command=self.merge_video_to_subtitle,
         )
 
@@ -561,7 +662,15 @@ class ChangeVideoAttributesApp(App):
                 # Configure the fonts for the subtitles
                 configure(binaries)
 
-            video_adjuster.merge_video_to_subtitle()
+            user_input = simpledialog.askstring(
+                self.json_change_video_attributes_app["simple_dialog_title"],
+                self.json_change_video_attributes_app["simple_dialog_text"],
+            )
+
+            if user_input:
+                video_adjuster.merge_video_to_subtitle(subtitle_language=user_input)
+            else:
+                video_adjuster.merge_video_to_subtitle()
 
         return True
 

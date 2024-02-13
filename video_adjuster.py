@@ -14,7 +14,15 @@ import ffmpeg
 from ffmpeg_progress_yield import FfmpegProgress
 
 from tk_progress_bar import ProgressBar
-from custom_thread import CustomThread
+from utils.threading_utils import CustomThread
+
+from utils.json_utils import (
+    load_translations,
+    load_last_used_settings,
+)
+
+language = load_last_used_settings()[0]
+translations = load_translations()[language]
 
 
 def simplify_file_path(file_path: Path | str) -> str:
@@ -66,7 +74,10 @@ def encode_to_utf8(file_path: Path | str) -> bool | str:
             encoding = result["encoding"]
 
     except FileNotFoundError:
-        return f'"{Path(file_path).stem}" arquivo de legenda não encontrado!'
+        error_string = translations["MessageBox"]["error_subtitle_not_found"].format(
+            filename=Path(file_path).stem
+        )
+        return error_string
 
     with open(file_path, "r", encoding=encoding) as f:
         content = f.read()
@@ -155,8 +166,8 @@ class VideoAdjuster:
 
             filename = Path(input_file).name
 
-            message = (
-                f'Convertendo o "{filename}"\n{i+1} de {self.total_files} arquivos'
+            message = translations["ProgressBar"]["converter_message"].format(
+                filename=filename, converter_message=i + 1, total_files=self.total_files
             )
 
             progress_bar_obj = self.setup_progress_bar(message)
@@ -199,7 +210,8 @@ class VideoAdjuster:
             elif conversion_type == "video":
                 if output_file.endswith(".mp3"):
                     messagebox.showerror(
-                        "Erro", "Não é possível converter para um vídeo mp3."
+                        translations["MessageBox"]["error"],
+                        message=translations["MessageBox"]["error_convert_video_mp3"],
                     )
 
                     return
@@ -261,9 +273,8 @@ class VideoAdjuster:
 
             temp_output_file = input_file.replace(filename, f"mod_{filename}")
 
-            message = (
-                f'Modificando título do "{filename}"\n'
-                f"{i + 1} de {self.total_files} arquivos"
+            message = translations["ProgressBar"]["change_title_message"].format(
+                filename=filename, current_file=i + 1, total_files=self.total_files
             )
 
             progress_bar_obj = self.setup_progress_bar(message)
@@ -309,11 +320,10 @@ class VideoAdjuster:
             self.input_files = simplify_file_path(input_file)
 
             name = Path(input_file).stem
-            file_name = Path(input_file).name
+            filename = Path(input_file).name
 
-            message = (
-                "Juntando vídeo com a legenda do "
-                f'"{file_name}"\n{i+1} de {self.total_files} arquivos'
+            message = translations["ProgressBar"]["merge_to_subtitle_message"].format(
+                filename=filename, current_file=i + 1, total_files=self.total_files
             )
 
             progress_bar_obj = self.setup_progress_bar(message)
@@ -324,7 +334,7 @@ class VideoAdjuster:
             )
 
             # Assume the subtitles have the same name as the video file
-            subtitles = input_file.replace(file_name, name + ".srt")
+            subtitles = input_file.replace(filename, name + ".srt")
 
             subtitle_exists = encode_to_utf8(subtitles)
 
@@ -332,8 +342,7 @@ class VideoAdjuster:
                 progress_bar_obj.root.destroy()
                 messagebox.showerror(
                     "Error",
-                    message=f'"{Path(subtitles).stem}" arquivo de legenda não encontrado!\
-                    \nEle deve possuir o mesmo nome do arquivo de video.',
+                    message=subtitle_exists,
                 )
                 continue
 

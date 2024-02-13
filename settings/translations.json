@@ -1,0 +1,96 @@
+{
+    "pt_BR": {
+        "Menu": {
+            "theme_menu_name": "Tema",
+            "theme_menu_light_mode": "Modo Claro",
+            "theme_menu_dark_mode": "Modo Escuro",
+            "language_menu_name": "Idioma",
+            "language_menu_portuguese": "Português",
+            "language_menu_english": "Inglês"
+        },
+        "Widgets": {
+            "input_folder_label": "Pasta dos arquivos",
+            "browse_input_button": "Procurar",
+            "output_folder_label": "Pasta de destino",
+            "browse_output_button": "Procurar",
+            "verify_files_button": "Verificar Arquivos",
+            "treeview_column1": "Nome do Arquivo"
+        },
+        "Video and Audio Converter": {
+            "VideoConverterApp_title": "Conversor de Videos e Audios",
+            "input_extension_label": "Extensão procurada:",
+            "output_extension_label": "Extensão desejada:",
+            "conversion_type_label": "Tipo de Conversão:",
+            "convert_button": "Converter"
+        },
+        "Change Video Attributes": {
+            "ChangeVideoAttributesApp_title": "Mudar atributos de vídeos",
+            "change_button": "Mudar Título",
+            "merge_button": "Juntar vídeo e legenda",
+            "simple_dialog_title": "Legenda",
+            "simple_dialog_text": "Digite o idioma da legenda (padrão: pt-BR)"
+        },
+        "MessageBox": {
+            "warning": "Atenção!",
+            "verify_button_not_clicked": "Antes de realizar a ação, clique em \"Verificar Arquivos\".",
+            "error": "Erro!",
+            "error_treeview_files_not_found": "Nenhum arquivo encontrado na pasta selecionada!",
+            "error_convert_video_mp3": "Não é possível converter para um vídeo mp3!\n mp3 é somente para áudio.",
+            "error_subtitle_not_found": "O arquivo de legenda \"{filename}\" não foi encontrado!\nEle deve possuir o mesmo nome que o arquivo de video."
+        },
+        "ProgressBar": {
+            "ProgressBar_title": "Progresso",
+            "cancel_all_button": "Cancelar Tudo",
+            "converter_message": "Convertendo o \"{filename}\".\n{current_file} de {total_files} arquivos",
+            "change_title_message": "Mudando o título do arquivo \"{filename}\".\n {current_file} de {total_files} arquivos",
+            "merge_to_subtitle_message": "Juntando o título e legenda do arquivo \"{filename}\".\n {current_file} de {total_files} arquivos"
+        }
+    },
+    "en_US": {
+        "Menu": {
+            "theme_menu_name": "Theme",
+            "theme_menu_light_mode": "Light Mode",
+            "theme_menu_dark_mode": "Dark Mode",
+            "language_menu_name": "Language",
+            "language_menu_portuguese": "Portuguese",
+            "language_menu_english": "English"
+        },
+        "Widgets": {
+            "input_folder_label": "Input Folder",
+            "browse_input_button": "Browse",
+            "output_folder_label": "Output Folder",
+            "browse_output_button": "Browse",
+            "verify_files_button": "Verify Files",
+            "treeview_column1": "File Name"
+        },
+        "Video and Audio Converter": {
+            "VideoConverterApp_title": "Video and Audio Converter",
+            "input_extension_label": "Searched Extension:",
+            "output_extension_label": "Desired Extension:",
+            "conversion_type_label": "Conversion Type:",
+            "convert_button": "Convert"
+        },
+        "Change Video Attributes": {
+            "ChangeVideoAttributesApp_title": "Change Video Attributes",
+            "change_button": "Change Title",
+            "merge_button": "Combine video and subtitles",
+            "simple_dialog_title": "Subtitle",
+            "simple_dialog_text": "Enter the subtitle language (default: pt-BR)"
+        },
+        "MessageBox": {
+            "warning": "Warning",
+            "verify_button_not_clicked": "click on \"Verify Files\" before performing an action.",
+            "error": "Error",
+            "error_treeview_files_not_found": "No files found in the selected folder!",
+            "error_convert_video_mp3": "It is not possible to convert to mp3 video!\n mp3 is only for audio conversion.",
+            "error_subtitle_not_found": "\"{filename}\" subtitle file not found!\nIt should have the same name as the video file."
+        },
+        "ProgressBar": {
+            "ProgressBar_title": "Progress",
+            "cancel_all_button": "Cancel All",
+            "converter_message": "Converting \"{filename}\".\n{current_file} of {total_files} files",
+            "change_title_message": "Changing the title of the file \"{filename}\".\n {current_file} of {total_files} files",
+            "merge_to_subtitle_message": "Merging the title and subtitle of the file \"{filename}\".\n {current_file} of {total_files} files"
+        }
+    }
+}

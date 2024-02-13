@@ -4,13 +4,16 @@ A module to create a progress bar in a Tkinter window.
 
 import time
 import tkinter as tk
-from tkinter import ttk
-from tkinter import PhotoImage, BooleanVar
+from tkinter import ttk, PhotoImage, BooleanVar
 
 from ffmpeg_progress_yield import FfmpegProgress
-from custom_thread import CustomThread
+from utils.threading_utils import CustomThread
 
+from utils.json_utils import load_translations, load_last_used_settings
 from utils.window_utils import center_window
+
+language = load_last_used_settings()[0]
+translations = load_translations()[language]
 
 
 class ProgressBar:
@@ -92,7 +95,9 @@ class ProgressBar:
         self.cancel.set(False)
 
         self.cancel_all_button = ttk.Button(
-            self.root, text="Cancelar tudo", command=self._set_cancel_all_true
+            self.root,
+            text=translations["cancel_all_button"],
+            command=self._set_cancel_all_true,
         )
 
         self.cancel_all = BooleanVar()
@@ -128,7 +133,7 @@ class ProgressBar:
 
         :return: None
         """
-        self.root.title("Progresso")
+        self.root.title(translations["ProgressBar_title"])
 
         self.progress_bar_label.pack(side="top", anchor="nw")
 
