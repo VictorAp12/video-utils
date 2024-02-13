@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Literal, Tuple
 import tkinter as tk
 from tkinter import messagebox, simpledialog, ttk, filedialog
+import webbrowser
 
 from ttkthemes import ThemedStyle
 from PIL import ImageTk, Image
@@ -44,8 +45,7 @@ class App(ABC):
         Constructor method for initializing the GUI window and setting
         up various elements within the window.
         """
-        self.language = language
-        self.json_translations = translations[self.language]
+        self.json_translations = translations[language]
 
         self.root = tk.Tk()
 
@@ -115,6 +115,25 @@ class App(ABC):
         )
 
         menu_bar.add_cascade(label=json_menu["language_menu_name"], menu=language_menu)
+
+        about_menu = tk.Menu(tearoff=0)
+
+        about_menu.add_command(
+            label=json_menu["about_menu_project_link"],
+            command=lambda: webbrowser.open(
+                "https://github.com/VictorAp12/video-utils"
+            ),
+        )
+
+        about_menu.add_command(
+            label=json_menu["about_menu_author"],
+            command=lambda: webbrowser.open("https://github.com/VictorAp12"),
+        )
+
+        # ToDo: add documentation
+        about_menu.add_command(label=json_menu["about_menu_documentation"], command="")
+
+        menu_bar.add_cascade(label=json_menu["about_menu_name"], menu=about_menu)
 
         self.root.config(menu=menu_bar)
 
@@ -439,6 +458,11 @@ class VideoConverterApp(App):
         )
         verify_files_button.grid(row=5, column=1, padx=5, pady=5, sticky="w")
 
+        ToolTip(
+            verify_files_button,
+            self.json_translations["Tooltips"]["verify_files_button_tooltip"],
+        )
+
     def create_convert_button(self) -> None:
         """
         Creates and configures a convert button in the GUI.
@@ -450,6 +474,11 @@ class VideoConverterApp(App):
             command=self.convert_file,
         )
         convert_button.grid(row=5, column=1, padx=5, pady=5, sticky="e")
+
+        ToolTip(
+            convert_button,
+            self.json_translations["Tooltips"]["convert_button_tooltip"],
+        )
 
     def execute_function(self, function_name: str) -> None:
         """
@@ -599,6 +628,11 @@ class ChangeVideoAttributesApp(App):
         )
         verify_files_button.grid(row=5, column=0, padx=5, pady=5, sticky="w")
 
+        ToolTip(
+            verify_files_button,
+            self.json_translations["Tooltips"]["verify_files_button_tooltip"],
+        )
+
     def create_change_button(self) -> None:
         """
         Creates and configures a change title button in the GUI.
@@ -611,6 +645,11 @@ class ChangeVideoAttributesApp(App):
         )
         change_button.grid(row=5, column=1, sticky="w", padx=5, pady=5)
 
+        ToolTip(
+            change_button,
+            self.json_translations["Tooltips"]["change_button_tooltip"],
+        )
+
     def create_merge_button(self) -> None:
         """
         Creates and configures a merge button in the GUI.
@@ -622,6 +661,11 @@ class ChangeVideoAttributesApp(App):
         )
 
         merge_button.grid(row=5, column=1, sticky="e", padx=5, pady=5)
+
+        ToolTip(
+            merge_button,
+            self.json_translations["Tooltips"]["merge_button_tooltip"],
+        )
 
     def browse_folder(self, folder_entry: tk.Entry) -> None:
         """
@@ -701,6 +745,35 @@ class ChangeVideoAttributesApp(App):
         Function to merge the subtitles with the video.
         """
         self.execute_function("merge_video_to_subtitle")
+
+
+class ToolTip:
+    """Creates a tooltip widget."""
+
+    def __init__(self, widget, text: str):
+        """Initializes the tooltip widget."""
+        self.widget = widget
+        self.text = text
+        self.tool_tip = None
+
+        def on_enter(event):
+            """Creates a tooltip when the mouse hovers over the widget."""
+            self.tool_tip = tk.Toplevel()
+            self.tool_tip.overrideredirect(True)
+            self.tool_tip.geometry(f"+{event.x_root+15}+{event.y_root+10}")
+
+            label = tk.Label(self.tool_tip, text=self.text)
+            label.pack()
+            self.tool_tip.update()
+            self.tool_tip.lift()
+
+        def on_leave(event):
+            """Closes the tooltip."""
+            if self.tool_tip:
+                self.tool_tip.destroy()
+
+        self.widget.bind("<Enter>", on_enter)
+        self.widget.bind("<Leave>", on_leave)
 
 
 if __name__ == "__main__":

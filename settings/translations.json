@@ -6,7 +6,11 @@
             "theme_menu_dark_mode": "Modo Escuro",
             "language_menu_name": "Idioma",
             "language_menu_portuguese": "Português",
-            "language_menu_english": "Inglês"
+            "language_menu_english": "Inglês",
+            "about_menu_name": "Sobre/Ajuda",
+            "about_menu_project_link": "Repositório do GitHub",
+            "about_menu_author": "GitHub do Criador",
+            "about_menu_documentation": "Como Funciona"
         },
         "Widgets": {
             "input_folder_label": "Pasta dos arquivos",
@@ -29,6 +33,12 @@
             "merge_button": "Juntar vídeo e legenda",
             "simple_dialog_title": "Legenda",
             "simple_dialog_text": "Digite o idioma da legenda (padrão: pt-BR)"
+        },
+        "Tooltips": {
+            "verify_files_button_tooltip": "Verifica os arquivos válidos que estão na pasta selecionada.",
+            "convert_button_tooltip": "Converte os arquivos selecionados para a extensão desejada.",
+            "change_button_tooltip": "Muda o atributo título do arquivos selecionados, para ficar igual ao nome do arquivo. Útil para quando se acessa o arquivo de um pc por streaming.\nPara mais informações leia a documentação do projeto indo no menu clicando em sobre.",
+            "merge_button_tooltip": "Junta o arquivo de vídeo com o arquivo de legenda(srt) dos arquivos selecionados."
         },
         "MessageBox": {
             "warning": "Atenção!",
@@ -53,7 +63,11 @@
             "theme_menu_dark_mode": "Dark Mode",
             "language_menu_name": "Language",
             "language_menu_portuguese": "Portuguese",
-            "language_menu_english": "English"
+            "language_menu_english": "English",
+            "about_menu_name": "About/Help",
+            "about_menu_author": "Creator's GitHub",
+            "about_menu_project_link": "GitHub Repository",
+            "about_menu_documentation": "Documentation"
         },
         "Widgets": {
             "input_folder_label": "Input Folder",
@@ -76,6 +90,12 @@
             "merge_button": "Combine video and subtitles",
             "simple_dialog_title": "Subtitle",
             "simple_dialog_text": "Enter the subtitle language (default: pt-BR)"
+        },
+        "Tooltips": {
+            "verify_files_button_tooltip": "Verifys valid files in the selected folder.",
+            "convert_button_tooltip": "Converts the selected files to the desired extension.",
+            "change_button_tooltip": "Changes the video title to the filename. Useful when accessing a video file from media streaming on pc.\nFor more information read the documentation in the menu clicking on about.",
+            "merge_button_tooltip": "Combines the video file with the subtitle file of the selected files."
         },
         "MessageBox": {
             "warning": "Warning",
