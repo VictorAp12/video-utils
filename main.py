@@ -3,18 +3,20 @@ This module contains two simple GUI application for converting video and audio f
 changing the title of video files to their filenames and combining video with subtitles (srt).
 """
 
-from abc import ABC, abstractmethod
 import os
+import sys
+from abc import ABC, abstractmethod
 from pathlib import Path
+from typing import Literal, Tuple
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog
-from typing import Literal, Tuple
 
 from ttkthemes import ThemedStyle
+from PIL import ImageTk, Image
 
-from window_utils import center_window
-from ffmpeg_utils import check, configure
+from utils.window_utils import center_window
+from utils.ffmpeg_utils import check, configure
 from video_adjuster import is_video_or_audio_file, VideoAdjuster
 
 
@@ -25,21 +27,23 @@ class App(ABC):
     It initializes the GUI window and sets up various elements within the window.
     """
 
-    def __init__(self, title: str) -> None:
+    def __init__(self, title: str, master: tk.Tk | None = None) -> None:
         """
         Constructor method for initializing the GUI window and setting
         up various elements within the window.
         """
 
-        self.root = tk.Tk()
+        if master:
+            self.root = tk.Toplevel(master=master)
+        else:
+            self.root = tk.Tk()
+
         self.style = ThemedStyle(self.root)
         self.style.set_theme("black")
-
         self.root.configure(bg=self.style.lookup("TLabel", "background"))
         self.root.title(title)
         self.root.resizable(False, False)
-
-        center_window(self.root)
+        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
 
         # make the window responsive
         self.root.grid_rowconfigure(0, weight=1)
@@ -49,28 +53,56 @@ class App(ABC):
 
         self.create_input_folder_entry()
 
+        self.treeview = ttk.Treeview(self.root, columns=(1,))
+
+        self.checked_image = ImageTk.PhotoImage(
+            Image.open("assets/checked-checkbox.png").resize((20, 20))
+        )
+        self.unchecked_image = ImageTk.PhotoImage(
+            Image.open("assets/blank-check-box.png").resize((20, 20))
+        )
+
     @abstractmethod
     def create_menu_bar(self) -> Tuple[tk.Menu, tk.Menu]:
         """
         Abstract method to create the menu bar, to change between apps.
         """
 
-        menu_bar = tk.Menu(self.root)
-
-        menu_bar.configure(bg=self.style.lookup("TLabel", "background"))
-
-        app_menu = tk.Menu(
-            menu_bar,
-            tearoff=0,
-            bg=self.style.lookup("TLabel", "background"),
-            fg="white",
+        menu_bar = tk.Menu(
+            self.root,
         )
 
+        app_menu = tk.Menu(tearoff=0)
+
         menu_bar.add_cascade(label="Apps", menu=app_menu)
+
+        theme_menu = tk.Menu(tearoff=0)
+
+        theme_menu.add_command(
+            label="Modo Claro",
+            command=lambda: self._change_theme("default"),
+        )
+        theme_menu.add_command(
+            label="Modo Escuro",
+            command=lambda: self._change_theme("black"),
+        )
+
+        menu_bar.add_cascade(label="Tema", menu=theme_menu)
 
         self.root.config(menu=menu_bar)
 
         return menu_bar, app_menu
+
+    def _change_theme(self, theme: Literal["default", "black"]) -> None:
+        """
+        Changes the theme of the application.
+        """
+        # print(self.style.get_themes())
+
+        self.style.set_theme(theme)
+        self.root.config(bg=self.style.lookup("TLabel", "background"))
+
+        center_window(self.root)
 
     def create_input_folder_entry(self) -> None:
         """
@@ -103,12 +135,85 @@ class App(ABC):
         folder_entry.delete(0, tk.END)
         folder_entry.insert(0, folder)
 
+    def create_treeview(self, files: list[Path]) -> None:
+        """
+        Creates a treeview to display the files in the input folder.
+        """
+        self.treeview.delete(*self.treeview.get_children())
+
+        self.treeview.tag_configure("checked", image=self.checked_image)
+        self.treeview.tag_configure("unchecked", image=self.unchecked_image)
+        self.treeview.bind("<Button 1>", self.toggle_check)
+
+        self.treeview.heading("#0", text="")
+        self.treeview.column(
+            "#0", width=50, minwidth=50, anchor="center", stretch=False
+        )
+
+        self.treeview.heading("#1", text="Nome Arquivo")
+
+        for file in files:
+            name = file.name
+
+            self.treeview.insert("", "end", tags="checked", values=(name,))
+
+        self.treeview.grid(row=10, column=0, columnspan=3, padx=5, pady=5, sticky="ew")
+
+        center_window(self.root)
+
+    def toggle_check(self, event):
+        """
+        A function to toggle the check status of a row in the treeview widget.
+
+        :param event (event): The event that triggered the function.
+
+        :return: None
+        """
+        try:
+            row_id = self.treeview.identify_row(event.y)
+            tag = self.treeview.item(row_id, "tags")[0]
+            tags = list(self.treeview.item(row_id, "tags"))
+            tags.remove(tag)
+            self.treeview.item(row_id, tags=tags)
+
+            if tag == "checked":
+                self.treeview.item(row_id, tags="unchecked")
+
+            else:
+                self.treeview.item(row_id, tags="checked")
+
+        except IndexError:
+            pass
+
     @abstractmethod
-    def execute_function(self, function_name: str) -> None:
+    def execute_function(self, function_name: str):
         """
         Abstract method to execute a function based on its name.
+
+        :param function_name: The name of the function to execute.
+
+        :return: list[Path] | None
         """
-        raise NotImplementedError("execute_function must be implemented")
+        if not self.treeview.get_children():
+            return None
+
+        input_folder = Path(self.input_folder_entry.get())
+
+        input_files = []
+        for row_id in self.treeview.get_children():
+            tags = self.treeview.item(row_id, "tags")
+            if "checked" in tags:
+                input_files.append(
+                    input_folder / self.treeview.item(row_id, "values")[0]
+                )
+
+        return input_files
+
+    def on_closing(self) -> None:
+        """
+        Function to close the window.
+        """
+        sys.exit()
 
 
 class VideoConverterApp(App):
@@ -131,7 +236,11 @@ class VideoConverterApp(App):
 
         self.create_conversion_type_radio_buttons()
 
+        self.create_verify_files_button()
+
         self.create_convert_button()
+
+        center_window(self.root)
 
     def create_menu_bar(self) -> None:
         """
@@ -140,7 +249,7 @@ class VideoConverterApp(App):
         menu_bar, app_menu = super().create_menu_bar()
 
         app_menu.add_command(
-            label="Mudar Titulo Videos e modificar legenda",
+            label="Mudar atributos de vídeos",
             command=self.open_change_video_title_app,
         )
 
@@ -150,7 +259,12 @@ class VideoConverterApp(App):
         """
         Opens the ChangeVideoTitleApp.
         """
-        app = ChangeVideoTitleApp()
+        app = ChangeVideoAttributesApp(self.root)  # type: ignore
+
+        # Hide the main window
+        self.root.withdraw()
+
+        # Show the ChangeVideoTitleApp
         app.root.mainloop()
 
     def create_output_folder_entry(self) -> None:
@@ -223,6 +337,13 @@ class VideoConverterApp(App):
         )
         video_radio_button.grid(row=4, column=1, padx=5, pady=5, sticky="e")
 
+    def create_verify_files_button(self) -> None:
+        """Create a button to verify the files in the input folder."""
+        verify_files_button = ttk.Button(
+            self.root, text="Verificar arquivos", command=self.verify_files
+        )
+        verify_files_button.grid(row=5, column=1, padx=5, pady=5, sticky="w")
+
     def create_convert_button(self) -> None:
         """
         Creates and configures a convert button in the GUI.
@@ -231,19 +352,18 @@ class VideoConverterApp(App):
         convert_button = ttk.Button(
             self.root, text="Converter", command=self.convert_file
         )
-        convert_button.grid(row=5, column=1, padx=5, pady=5)
+        convert_button.grid(row=5, column=1, padx=5, pady=5, sticky="e")
 
     def execute_function(self, function_name: str) -> None:
         """
         Function to execute the selected function.
         """
+        input_files = super().execute_function(function_name)
+
+        if not input_files:
+            return
+
         input_folder = Path(self.input_folder_entry.get())
-        input_extension = self.input_extension_entry.get()
-
-        input_files = [
-            file for file in input_folder.iterdir() if is_video_or_audio_file(file)
-        ]
-
         output_folder = Path(self.output_folder_entry.get())
         output_extension = self.output_extension_entry.get()
         conversion_type = self.conversion_type_var.get()
@@ -255,25 +375,38 @@ class VideoConverterApp(App):
         ):
             return
 
-        for i, input_file in enumerate(input_files):
-            output_file = (
-                f"{output_folder}\\"
-                + f"{input_file.name.replace(input_extension, output_extension)}"
-            )
-            input_file = input_folder / input_file
+        video_adjuster = VideoAdjuster(
+            input_files=input_files,
+            output_folder=output_folder,
+            master=self.root,
+        )
 
-            video_adjuster = VideoAdjuster(
-                input_file,
-                output_file,
-                i + 1,
-                len(input_files),
-            )
+        if function_name == "audio_converter":
+            video_adjuster.run_converter(conversion_type, output_extension)
 
-            if function_name == "audio_converter":
-                video_adjuster.run_converter(conversion_type)
+        elif function_name == "video_converter":
+            video_adjuster.run_converter(conversion_type, output_extension)
 
-            elif function_name == "video_converter":
-                video_adjuster.run_converter(conversion_type)
+    def verify_files(self):
+        """
+        Verifies the input folder and extension entries, creates a list of input files,
+        and updates the treeview with the input files. Returns True if successful,
+        or None if the input folder or extension entries are empty.
+        """
+
+        if not self.input_folder_entry.get() and not self.input_extension_entry.get():
+            return
+        if not self.input_folder_entry.get() or not self.input_extension_entry.get():
+            return
+        input_files = []
+        for file in Path(self.input_folder_entry.get()).iterdir():
+            if (
+                file.suffix == self.input_extension_entry.get()
+                and is_video_or_audio_file(file)
+            ):
+                input_files.append(file)
+
+        self.create_treeview(input_files)
 
     def convert_file(self) -> None:
         """
@@ -290,22 +423,33 @@ class VideoConverterApp(App):
             self.execute_function("video_converter")
 
 
-class ChangeVideoTitleApp(App):
+class ChangeVideoAttributesApp(App):
     """
     This class is used to create a GUI application for
     changing the title of video file to its filename.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, master: tk.Tk) -> None:
         """
         Constructor method for initializing the GUI window and setting
         up various elements within the window.
         """
-        super().__init__("Mudar título de videos e audios")
+        self.master = master
+
+        super().__init__(
+            "Mudar atributos de vídeos",
+            master=self.master,
+        )
+
+        self.create_verify_files_button()
 
         self.create_change_button()
 
         self.create_merge_button()
+
+        center_window(self.root)
+
+        self.root.focus_set()
 
     def create_menu_bar(self) -> None:
         """
@@ -324,8 +468,8 @@ class ChangeVideoTitleApp(App):
         """
         Opens a new window that allows the user to convert video files.
         """
-        app = VideoConverterApp()
-        app.root.mainloop()
+        self.master.deiconify()
+        self.root.destroy()
 
     def create_input_folder_entry(self) -> None:
         """
@@ -335,13 +479,26 @@ class ChangeVideoTitleApp(App):
         folder_label = ttk.Label(self.root, text="Pasta dos arquivos:", justify="left")
         folder_label.grid(row=0, column=0, padx=5, pady=5)
 
-        self.folder_entry = ttk.Entry(self.root, width=50)
-        self.folder_entry.grid(row=0, column=1, padx=5, pady=5)
+        self.input_folder_entry = ttk.Entry(self.root, width=50)
+        self.input_folder_entry.grid(row=0, column=1, padx=5, pady=5)
 
         browse_input_button = ttk.Button(
-            self.root, text="Procurar", command=self.browse_folder
+            self.root,
+            text="Procurar",
+            command=lambda: self.browse_folder(self.input_folder_entry),
         )
         browse_input_button.grid(row=0, column=2, padx=5, pady=5)
+
+    def create_verify_files_button(self):
+        """
+        Verifies the input folder and extension entries, creates a list of input files,
+        and updates the treeview with the input files. Returns True if successful,
+        or None if the input folder or extension entries are empty.
+        """
+        verify_files_button = ttk.Button(
+            self.root, text="Verificar arquivos", command=self.verify_files
+        )
+        verify_files_button.grid(row=5, column=0, padx=5, pady=5, sticky="w")
 
     def create_change_button(self) -> None:
         """
@@ -365,54 +522,64 @@ class ChangeVideoTitleApp(App):
 
         merge_button.grid(row=5, column=1, sticky="e", padx=5, pady=5)
 
-    def browse_folder(self) -> None:
+    def browse_folder(self, folder_entry: tk.Entry) -> None:
         """
         Function to browse the folder and update the folder_entry
         with the selected folder path. No parameters and no return type.
         """
 
         folder = filedialog.askdirectory(mustexist=True)
-        self.folder_entry.delete(0, tk.END)
-        self.folder_entry.insert(0, folder)
+        folder_entry.delete(0, tk.END)
+        folder_entry.insert(0, folder)
 
     def execute_function(
-        self, name: Literal["change_title", "merge_video_to_subtitle"]
-    ) -> None:
+        self, function_name: Literal["change_title", "merge_video_to_subtitle"]
+    ) -> bool:
         """
         Function to execute the selected function.
         """
-        input_folder = Path(self.folder_entry.get())
+        input_files = super().execute_function(function_name)
 
-        input_files = [
-            file for file in input_folder.iterdir() if is_video_or_audio_file(file)
-        ]
+        if not input_files:
+            return False
 
-        if not input_folder.exists():
+        input_files = [str(input_file) for input_file in input_files]
+
+        video_adjuster = VideoAdjuster(input_files=input_files, master=self.root)
+
+        if function_name == "change_title":
+            video_adjuster.change_video_title_to_filename()
+
+        elif function_name == "merge_video_to_subtitle":
+            os.environ["FFMPEG_DIRECTORY"] = "C:\\Program Files\\ffmpeg"
+
+            binaries = check()
+            if not binaries:
+                return False
+
+            if os.name == "nt":
+                # Configure the fonts for the subtitles
+                configure(binaries)
+
+            video_adjuster.merge_video_to_subtitle()
+
+        return True
+
+    def verify_files(self):
+        """
+        Verifies the input folder and extension entries, creates a list of input files,
+        and updates the treeview with the input files. Returns True if successful,
+        or None if the input folder or extension entries are empty.
+        """
+        if not self.input_folder_entry.get():
             return
 
-        for i, input_file in enumerate(input_files):
+        input_files = []
+        for file in Path(self.input_folder_entry.get()).iterdir():
+            if is_video_or_audio_file(file):
+                input_files.append(file)
 
-            input_file = input_folder / input_file
-
-            video_adjuster = VideoAdjuster(
-                input_file=input_file, current_file=i + 1, total_files=len(input_files)
-            )
-
-            if name == "change_title":
-                video_adjuster.change_video_title_to_filename()
-
-            elif name == "merge_video_to_subtitle":
-                os.environ["FFMPEG_DIRECTORY"] = "C:\\Program Files\\ffmpeg"
-
-                binaries = check()
-                if not binaries:
-                    return
-
-                if os.name == "nt":
-                    # Configure the fonts for the subtitles
-                    configure(binaries)
-
-                video_adjuster.merge_video_to_subtitle()
+        self.create_treeview(input_files)
 
     def change_title(self) -> None:
         """

@@ -1,7 +1,11 @@
+"""
+This module contains utility functions for working with tkinter windows.
+"""
+
 import tkinter as tk
 
 
-def center_window(window: tk.Tk, master: tk.Tk | None = None) -> None:
+def center_window(window: tk.Tk | tk.Toplevel, master: tk.Tk | tk.Toplevel | None = None) -> None:
     """
     Center the given window on the screen, or relative to the provided master window.
 
@@ -19,21 +23,23 @@ def center_window(window: tk.Tk, master: tk.Tk | None = None) -> None:
     screen_width = window.winfo_screenwidth()
     screen_height = window.winfo_screenheight()
 
-    x = (screen_width - window_width) // 2
-    y = (screen_height - window_height) // 2
+    x = (screen_width - window_width) / 2
+    y = (screen_height - window_height) / 2
 
     if master:
         master.update_idletasks()
-        x = master.winfo_x() + (master.winfo_width() - window_width) // 2
-        y = master.winfo_y() + (master.winfo_height() - window_height) // 2
-        y += int(master.winfo_rooty() - master.winfo_y() // 2.1)
+        x = master.winfo_x() + (master.winfo_width() - window_width) / 2
+        y = master.winfo_y() + (master.winfo_height() - window_height) / 2
 
-    window.geometry(f"+{x}+{y}")
+    window.geometry(f"{window_width}x{window_height}+{int(x)}+{int(y)}")
 
 
 def print_window_size(event) -> None:
     """
     A method to print the window size based on the event parameters.
+    In your tkinter window code, bind this method to the window's event
+    Example:
+        configure_binding = self.root.bind("<Configure>", print_window_size)
 
     :param event: The event object containing width and height.
 
