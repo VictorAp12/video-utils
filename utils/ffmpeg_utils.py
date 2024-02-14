@@ -25,6 +25,56 @@ SOFTWARE.
 """
 
 import os
+from pathlib import Path
+from tkinter import messagebox, filedialog
+
+from dotenv import load_dotenv
+
+if __name__ == "__main__":
+    from json_utils import load_translations, load_last_used_settings
+else:
+    from utils.json_utils import load_translations, load_last_used_settings
+
+
+def check_ffmpeg_tkinter() -> str | None:
+    """
+    Check if the base directory environment variable is defined,
+    and verify the location of the ffmpeg binaries.
+    """
+    load_dotenv(os.path.abspath(".env"), override=True, encoding="utf-8")
+
+    os.environ["FFMPEG_DIRECTORY"] = str(os.getenv("FFMPEG_FOLDER"))
+
+    translations = load_translations()
+    json_translations = translations[load_last_used_settings()[0]]
+
+    try:
+        binaries = check()
+
+        return binaries
+
+    except (FileNotFoundError, KeyError, ValueError) as e:
+        if isinstance(e, ValueError):
+            messagebox.showerror(
+                json_translations["MessageBox"]["error"],
+                message=json_translations["MessageBox"]["error_ffmpeg_restricted"],
+            )
+        else:
+            messagebox.showerror(
+                json_translations["MessageBox"]["error"],
+                message=json_translations["MessageBox"]["error_ffmpeg_not_found"],
+            )
+
+        ffmpeg_folder = filedialog.askdirectory(mustexist=True)
+
+        with open(".env", "w", encoding="utf-8") as f:
+            f.write(f'FFMPEG_FOLDER = "{Path(ffmpeg_folder).as_posix()}"')
+
+        load_dotenv(os.path.abspath(".env"), override=True, encoding="utf-8")
+
+        os.environ["FFMPEG_DIRECTORY"] = str(os.getenv("FFMPEG_FOLDER"))
+
+        return None
 
 
 def check():
@@ -51,22 +101,32 @@ def check():
     if not (
         os.path.exists(binaries + "ffmpeg") or os.path.exists(binaries + "ffmpeg.exe")
     ):
-        print("Please download the ffmpeg binaries from www.ffmpeg.org")
-        return None
+        raise FileNotFoundError(
+            "Please download the ffmpeg binaries from www.ffmpeg.org"
+        )
+
     return binaries
 
 
 def configure(binaries):
+    """
+    Configure the fonts for the subtitles on windows.
+    """
+
     # The fonts.conf must be under the directory with ffmpeg executable
     fonts = binaries + "fonts"
+
     # Neme of the config file must be fonts.conf
     name = "fonts.conf"
+
     # Point ffmped to its fonts.conf
     os.environ["FC_CONFIG_DIR"] = fonts
     os.environ["FC_CONFIG_FILE"] = fonts + os.sep + name
+
     # Check the presence of fonts directory
     if not os.path.exists(os.environ["FC_CONFIG_DIR"]):
         os.mkdir(os.environ["FC_CONFIG_DIR"])
+
     # Check the presence of fonts.conf
     if not os.path.exists(os.environ["FC_CONFIG_FILE"]):
         fc_config_file = open(os.environ["FC_CONFIG_FILE"], "wb")
@@ -77,22 +137,20 @@ def configure(binaries):
 
 
 if __name__ == "__main__":
-    from main import is_video_or_audio_file
+    import sys
+
+    sys.path.append(os.getcwd())
+
     from video_adjuster import VideoAdjuster
 
-    # Set the environment variable to the location of the ffmpeg folder
-    os.environ["FFMPEG_DIRECTORY"] = "C:\\Program Files\\ffmpeg"
+    binaries_ = check_ffmpeg_tkinter()
 
-    # Check the presence and location of the binaries
-    binaries_ = check()
     if binaries_:
         if os.name == "nt":
             # Configure the fonts for the subtitles
             configure(binaries_)
 
-        video_adjuster = VideoAdjuster()
         # Merge the subtitles with the video
         for root, dirs, files in os.walk(os.getcwd()):
-            for file_ in files:
-                if is_video_or_audio_file(file_):
-                    video_adjuster.merge_video_to_subtitle(os.path.join(root, file_))
+            video_adjuster = VideoAdjuster(files)
+            video_adjuster.merge_video_to_subtitle("pt_BR")

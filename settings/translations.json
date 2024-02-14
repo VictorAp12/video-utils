@@ -46,7 +46,10 @@
             "error": "Erro!",
             "error_treeview_files_not_found": "Nenhum arquivo encontrado na pasta selecionada!",
             "error_convert_video_mp3": "Não é possível converter para um vídeo mp3!\n mp3 é somente para áudio.",
-            "error_subtitle_not_found": "O arquivo de legenda \"{filename}\" não foi encontrado!\nEle deve possuir o mesmo nome que o arquivo de video."
+            "error_subtitle_not_found": "O arquivo de legenda \"{filename}\" não foi encontrado!\nEle deve possuir o mesmo nome que o arquivo de video.",
+            "error_ffmpeg_not_found": "Pasta do ffmpeg não encontrada! Verifique e selecione o caminho do ffmpeg.\nÉ parecido com isso C:\\Program Files\\ffmpeg.\nSe ainda não instalou instale no site www.ffmpeg.org e coloque no path do sistema.",
+            "error_ffmpeg_restricted": "A pasta do ffmpeg não pode estar dentro de system32 ou qualquer outro diretório restrito. Verifique o caminho do ffmpeg e tente novamente.",
+            "error_ffmpeg_command": "Erro durante a execução do comando!\nVerifique se a extensão desejada é valida, se é possível converter para video/audio\ne se o arquivo de entrada não está corrompido."
         },
         "ProgressBar": {
             "ProgressBar_title": "Progresso",
@@ -103,7 +106,10 @@
             "error": "Error",
             "error_treeview_files_not_found": "No files found in the selected folder!",
             "error_convert_video_mp3": "It is not possible to convert to mp3 video!\n mp3 is only for audio conversion.",
-            "error_subtitle_not_found": "\"{filename}\" subtitle file not found!\nIt should have the same name as the video file."
+            "error_subtitle_not_found": "\"{filename}\" subtitle file not found!\nIt should have the same name as the video file.",
+            "error_ffmpeg_not_found": "ffmpeg folder not found! Check and select the ffmpeg path.\nIt's like this: C:\\Program Files\\ffmpeg.\nIf it is not installed, install it from the website www.ffmpeg.org and put the path system.",
+            "error_ffmpeg_restricted": "The ffmpeg binaries cannot be under system32 directory or any other restricted folder. Check the ffmpeg path and try again.",
+            "error_ffmpeg_command": "Error during the ffmpeg command!\nCheck if the desired extension is valid, if it is possible to convert to video/audio\nand if the input file is not corrupted."
         },
         "ProgressBar": {
             "ProgressBar_title": "Progress",

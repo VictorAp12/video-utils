@@ -21,7 +21,7 @@ from utils.json_utils import (
     load_translations,
 )
 from utils.window_utils import center_window
-from utils.ffmpeg_utils import check, configure
+from utils.ffmpeg_utils import configure, check_ffmpeg_tkinter
 from video_adjuster import is_video_or_audio_file, VideoAdjuster
 
 
@@ -53,6 +53,7 @@ class App(ABC):
         self.style.set_theme(load_last_used_settings()[1])
         self.root.configure(bg=self.style.lookup("TLabel", "background"))
         self.root.title(title)
+        self.root.iconbitmap("assets/video-util.ico")
         self.root.resizable(False, False)
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
 
@@ -64,7 +65,11 @@ class App(ABC):
 
         self.create_input_folder_entry()
 
+        # table
         self.treeview = ttk.Treeview(self.root, columns=(1,))
+
+        # table scrollbar
+        self.scrollbar = ttk.Scrollbar(self.root, command=self.treeview.yview)
 
         self.checked_image = ImageTk.PhotoImage(
             Image.open("assets/checked-checkbox.png").resize((20, 20))
@@ -231,8 +236,11 @@ class App(ABC):
 
         for file in files:
             name = file.name
-
             self.treeview.insert("", "end", tags="checked", values=(name,))
+
+        self.scrollbar.grid(row=10, column=3, padx=5, pady=5, sticky="ns")
+
+        self.treeview.configure(yscrollcommand=self.scrollbar.set)
 
         self.treeview.grid(row=10, column=0, columnspan=3, padx=5, pady=5, sticky="ew")
 
@@ -501,6 +509,11 @@ class VideoConverterApp(App):
         ):
             return
 
+        binaries = check_ffmpeg_tkinter()
+
+        if binaries is None:
+            return
+
         video_adjuster = VideoAdjuster(
             input_files=input_files,
             output_folder=output_folder,
@@ -524,6 +537,7 @@ class VideoConverterApp(App):
             return
         if not self.input_folder_entry.get() or not self.input_extension_entry.get():
             return
+
         input_files = []
         for file in Path(self.input_folder_entry.get()).iterdir():
             if (
@@ -692,15 +706,15 @@ class ChangeVideoAttributesApp(App):
 
         video_adjuster = VideoAdjuster(input_files=input_files, master=self.root)
 
+        binaries = check_ffmpeg_tkinter()
+
+        if binaries is None:
+            return False
+
         if function_name == "change_title":
             video_adjuster.change_video_title_to_filename()
 
         elif function_name == "merge_video_to_subtitle":
-            os.environ["FFMPEG_DIRECTORY"] = "C:\\Program Files\\ffmpeg"
-
-            binaries = check()
-            if not binaries:
-                return False
 
             if os.name == "nt":
                 # Configure the fonts for the subtitles
@@ -765,9 +779,8 @@ class ToolTip:
             label = tk.Label(self.tool_tip, text=self.text)
             label.pack()
             self.tool_tip.update()
-            self.tool_tip.lift()
 
-        def on_leave(event):
+        def on_leave(event):  # pylint: disable=unused-argument
             """Closes the tooltip."""
             if self.tool_tip:
                 self.tool_tip.destroy()

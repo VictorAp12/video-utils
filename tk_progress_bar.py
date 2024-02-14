@@ -4,7 +4,7 @@ A module to create a progress bar in a Tkinter window.
 
 import time
 import tkinter as tk
-from tkinter import ttk, PhotoImage, BooleanVar
+from tkinter import ttk, PhotoImage, BooleanVar, messagebox
 
 from ffmpeg_progress_yield import FfmpegProgress
 from utils.threading_utils import CustomThread
@@ -16,7 +16,7 @@ language = load_last_used_settings()[0]
 translations = load_translations()[language]
 
 
-class ProgressBar:
+class CustomProgressBar:
     """
     A class to create and manage a progress bar in a Tkinter window.
 
@@ -65,6 +65,8 @@ class ProgressBar:
 
         self.with_pause_button = with_pause_button
 
+        self.json_progress_bar = translations["ProgressBar"]
+
         if self.master:
             theme = ttk.Style(master)
             self.root = tk.Toplevel(
@@ -96,7 +98,7 @@ class ProgressBar:
 
         self.cancel_all_button = ttk.Button(
             self.root,
-            text=translations["cancel_all_button"],
+            text=self.json_progress_bar["cancel_all_button"],
             command=self._set_cancel_all_true,
         )
 
@@ -133,7 +135,7 @@ class ProgressBar:
 
         :return: None
         """
-        self.root.title(translations["ProgressBar_title"])
+        self.root.title(self.json_progress_bar["ProgressBar_title"])
 
         self.progress_bar_label.pack(side="top", anchor="nw")
 
@@ -229,18 +231,28 @@ class ProgressBar:
         """
         self.root.deiconify()
 
-        for progress in command.run_command_with_progress({"shell": True}):
-            if self.cancel.get():
-                command.quit_gracefully()
-                self.root.quit()
-                break
+        try:
+            for progress in command.run_command_with_progress({"shell": True}):
+                if self.cancel.get():
+                    command.quit_gracefully()
+                    self.root.quit()
+                    break
 
-            if self.cancel_all.get():
-                command.quit_gracefully()
-                self.root.quit()
-                return False
+                if self.cancel_all.get():
+                    command.quit_gracefully()
+                    self.root.quit()
+                    return False
 
-            self.root.after(10, self._update_progress, progress)
+                self.root.after(10, self._update_progress, progress)
+
+        except RuntimeError:
+            self.root.withdraw()
+            messagebox.showerror(
+                translations["MessageBox"]["error"],
+                message=translations["MessageBox"]["error_ffmpeg_command"],
+            )
+            self.root.destroy()
+            return False
 
         self.root.quit()
 
@@ -260,10 +272,14 @@ class ProgressBar:
         """Function to close the window."""
         self.cancel.set(True)
 
-        if self.pause.get():
-            self.pause.set(False)
-        else:
-            self.pause.set(True)
+        try:
+            if self.pause.get():
+                self.pause.set(False)
+            else:
+                self.pause.set(True)
+
+        except AttributeError:
+            pass
 
     def _set_cancel_all_true(self) -> None:
         """Function to close the window and stop all the progresses"""
@@ -280,7 +296,7 @@ class ProgressBar:
 
 
 if __name__ == "__main__":
-    barra = ProgressBar()
+    barra = CustomProgressBar()
 
     barra.create_progress_bar()
 

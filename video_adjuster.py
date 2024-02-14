@@ -13,7 +13,9 @@ import chardet
 import ffmpeg
 from ffmpeg_progress_yield import FfmpegProgress
 
-from tk_progress_bar import ProgressBar
+
+from tk_progress_bar import CustomProgressBar
+
 from utils.threading_utils import CustomThread
 
 from utils.json_utils import (
@@ -106,7 +108,7 @@ class VideoAdjuster:
         self.master = master
 
     def thread_function(
-        self, progress_bar_obj: ProgressBar, command: FfmpegProgress
+        self, progress_bar_obj: CustomProgressBar, command: FfmpegProgress
     ) -> threading.Thread:
         """
         A function to run a command in a separate thread.
@@ -126,7 +128,7 @@ class VideoAdjuster:
 
         return progress_thread
 
-    def setup_progress_bar(self, message: str) -> ProgressBar:
+    def setup_progress_bar(self, message: str) -> CustomProgressBar:
         """
         Sets up the progress bar object.
 
@@ -135,7 +137,7 @@ class VideoAdjuster:
         :return: ProgressBar
         """
 
-        progress_bar_obj = ProgressBar(master=self.master, with_pause_button=False)
+        progress_bar_obj = CustomProgressBar(master=self.master, with_pause_button=False)
         progress_bar_obj.create_progress_bar()
 
         progress_bar_obj.set_label_text(message)
@@ -167,7 +169,7 @@ class VideoAdjuster:
             filename = Path(input_file).name
 
             message = translations["ProgressBar"]["converter_message"].format(
-                filename=filename, converter_message=i + 1, total_files=self.total_files
+                filename=filename, current_file=i + 1, total_files=self.total_files
             )
 
             progress_bar_obj = self.setup_progress_bar(message)
@@ -209,11 +211,11 @@ class VideoAdjuster:
 
             elif conversion_type == "video":
                 if output_file.endswith(".mp3"):
+                    progress_bar_obj.root.destroy()
                     messagebox.showerror(
                         translations["MessageBox"]["error"],
                         message=translations["MessageBox"]["error_convert_video_mp3"],
                     )
-
                     return
 
                 try:
@@ -392,7 +394,7 @@ if __name__ == "__main__":
 
     path = glob.glob("*.mkv")
 
-    progress_bar_obj_ = ProgressBar()
+    progress_bar_obj_ = CustomProgressBar()
 
     progress_bar_obj_.create_progress_bar()
 
