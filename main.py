@@ -7,7 +7,8 @@ import os
 import sys
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Literal, Tuple
+import threading
+from typing import List, Literal, Tuple
 import tkinter as tk
 from tkinter import messagebox, simpledialog, ttk, filedialog
 import webbrowser
@@ -44,6 +45,11 @@ class App(ABC):
         """
         Constructor method for initializing the GUI window and setting
         up various elements within the window.
+
+        :param title: str, The title of the window.
+        :param language: Literal["pt_BR", "en_US"], The language to be used in the window.
+
+        :return: None.
         """
         self.json_translations = translations[language]
 
@@ -82,6 +88,8 @@ class App(ABC):
     def create_menu_bar(self) -> Tuple[tk.Menu, tk.Menu]:
         """
         Abstract method to create the menu bar, to change between apps.
+
+        :return: Tuple[tk.Menu, tk.Menu], The menu bar and the app menu.
         """
         json_menu = self.json_translations["Menu"]
 
@@ -147,6 +155,10 @@ class App(ABC):
     def _change_theme(self, theme: Literal["default", "black"]) -> None:
         """
         Changes the theme of the application.
+
+        :param theme Literal["default", "black"]: Defaults to the last used theme.
+
+        :return: None.
         """
         if theme == load_last_used_settings()[1]:
             return
@@ -186,6 +198,8 @@ class App(ABC):
     def create_input_folder_entry(self) -> None:
         """
         Creates input folder entry and associated label and button.
+
+        :return: None.
         """
         json_widgets = self.json_translations["Widgets"]
 
@@ -210,14 +224,22 @@ class App(ABC):
         """
         Function to browse the folder and update the folder_entry
         with the selected folder path. No parameters and no return type.
+
+        :param folder_entry: The entry widget to update with the selected folder path.
+
+        :return: None.
         """
         folder = filedialog.askdirectory(mustexist=True)
         folder_entry.delete(0, tk.END)
         folder_entry.insert(0, folder)
 
-    def create_treeview(self, files: list[Path]) -> None:
+    def create_treeview(self, files: List[Path]) -> None:
         """
         Creates a treeview to display the files in the input folder.
+
+        :param files: list[Path], The list of files in the input folder.
+
+        :return: None.
         """
         json_widgets = self.json_translations["Widgets"]
 
@@ -246,13 +268,13 @@ class App(ABC):
 
         center_window(self.root)
 
-    def toggle_check(self, event):
+    def toggle_check(self, event: tk.Event) -> None:
         """
         A function to toggle the check status of a row in the treeview widget.
 
-        :param event (event): The event that triggered the function.
+        :param event (tk.Event): The event that triggered the function.
 
-        :return: None
+        :return: None.
         """
         try:
             row_id = self.treeview.identify_row(event.y)
@@ -271,13 +293,15 @@ class App(ABC):
             pass
 
     @abstractmethod
-    def execute_function(self, function_name: str):
+    def execute_function(self, function_name: str) -> List[Path] | None:
         """
         Abstract method to execute a function based on its name.
 
         :param function_name: The name of the function to execute.
 
-        :return: list[Path] | None
+        :raises tk.messagebox warning: If the treeview is empty.
+
+        :return: List[Path] | None.
         """
         json_messagebox = self.json_translations["MessageBox"]
 
@@ -305,6 +329,8 @@ class App(ABC):
     def on_closing(self) -> None:
         """
         Function to close the window.
+
+        :return: None.
         """
         sys.exit()
 
@@ -321,6 +347,10 @@ class VideoConverterApp(App):
         """
         Constructor method for initializing the GUI window and setting
         up various elements within the window.
+
+        :param language: The language to be used in the application.
+
+        :return: None.
         """
         self.json_translations = translations[language]
         self.json_video_converter_app = self.json_translations[
@@ -348,6 +378,8 @@ class VideoConverterApp(App):
     def create_menu_bar(self) -> None:
         """
         Creates and configures the menu bar to change between apps.
+
+        :return: None.
         """
 
         menu_bar, app_menu = super().create_menu_bar()
@@ -364,6 +396,8 @@ class VideoConverterApp(App):
     def open_change_video_title_app(self) -> None:
         """
         Opens the ChangeVideoTitleApp.
+
+        :return: None.
         """
         # Destroy this window
         self.root.destroy()
@@ -381,6 +415,8 @@ class VideoConverterApp(App):
     def create_output_folder_entry(self) -> None:
         """
         Create output folder entry widgets and place them in the root window.
+
+        :return: None.
         """
         json_widgets = self.json_translations["Widgets"]
 
@@ -404,6 +440,8 @@ class VideoConverterApp(App):
     def create_input_extension_entry(self) -> None:
         """
         Creates an input extension entry and label in the GUI.
+
+        :return: None.
         """
         input_extension_label = ttk.Label(
             self.root,
@@ -418,6 +456,8 @@ class VideoConverterApp(App):
     def create_output_extension_entry(self) -> None:
         """
         Creates and configures the output extension entry in the GUI.
+
+        :return: None.
         """
 
         output_extension_label = ttk.Label(
@@ -434,6 +474,8 @@ class VideoConverterApp(App):
     def create_conversion_type_radio_buttons(self) -> None:
         """
         Creates radio buttons for selecting the type of conversion.
+
+        :return: None.
         """
 
         conversion_type_label = ttk.Label(
@@ -456,7 +498,11 @@ class VideoConverterApp(App):
         video_radio_button.grid(row=4, column=1, padx=5, pady=5, sticky="e")
 
     def create_verify_files_button(self) -> None:
-        """Create a button to verify the files in the input folder."""
+        """
+        Create a button to verify the files in the input folder.
+
+        :return: None.
+        """
         json_widgets = self.json_translations["Widgets"]
 
         verify_files_button = ttk.Button(
@@ -474,6 +520,8 @@ class VideoConverterApp(App):
     def create_convert_button(self) -> None:
         """
         Creates and configures a convert button in the GUI.
+
+        :return: None.
         """
 
         convert_button = ttk.Button(
@@ -491,6 +539,12 @@ class VideoConverterApp(App):
     def execute_function(self, function_name: str) -> None:
         """
         Function to execute the selected function.
+
+        :param function_name: str, The name of the function to execute.
+
+        :raises tk.messagebox warning: If the fields are not filled.
+
+        :return: None.
         """
         input_files = super().execute_function(function_name)
 
@@ -507,6 +561,10 @@ class VideoConverterApp(App):
             or not input_folder.is_dir()
             or conversion_type not in ("audio", "video")
         ):
+            messagebox.showwarning(
+                self.json_translations["MessageBox"]["warning"],
+                message=self.json_translations["MessageBox"]["error_missing_field"],
+            )
             return
 
         binaries = check_ffmpeg_tkinter()
@@ -531,28 +589,51 @@ class VideoConverterApp(App):
         Verifies the input folder and extension entries, creates a list of input files,
         and updates the treeview with the input files. Returns True if successful,
         or None if the input folder or extension entries are empty.
-        """
 
+        :raises tk.messagebox error: If the folder does not exist.
+        :raises tk.messagebox info: If the number of input files is greater than 50.
+
+        :return: None.
+        """
         if not self.input_folder_entry.get() and not self.input_extension_entry.get():
             return
         if not self.input_folder_entry.get() or not self.input_extension_entry.get():
             return
 
-        input_files = []
-        for file in Path(self.input_folder_entry.get()).iterdir():
-            if (
-                file.suffix == self.input_extension_entry.get()
-                and is_video_or_audio_file(file)
-            ):
-                input_files.append(file)
+        input_folder = Path(self.input_folder_entry.get())
 
-        self.create_treeview(input_files)
+        if not input_folder.exists():
+            messagebox.showerror(
+                self.json_translations["MessageBox"]["error"],
+                self.json_translations["MessageBox"]["error_folder_does_not_exist"],
+            )
+            return
+
+        input_files = list(input_folder.glob("*" + self.input_extension_entry.get()))
+
+        if len(input_files) > 50:
+            messagebox.showinfo(
+                self.json_translations["MessageBox"]["info"],
+                self.json_translations["MessageBox"]["too_many_files"],
+                parent=self.root,
+            )
+
+        def check_files(files: List[Path]) -> None:
+            input_files = [file for file in files if is_video_or_audio_file(file)]
+
+            if input_files:
+                self.create_treeview(input_files)
+
+        thread = threading.Thread(target=check_files, args=(input_files,))
+        thread.start()
 
     def convert_file(self) -> None:
         """
         Convert files from one format to another based on the specified input and output
         folders, extensions, and conversion type. Uses audio_converter or video_converter
         based on the conversion type.
+
+        :return: None.
         """
         conversion_type = self.conversion_type_var.get()
 
@@ -575,6 +656,10 @@ class ChangeVideoAttributesApp(App):
         """
         Constructor method for initializing the GUI window and setting
         up various elements within the window.
+
+        :param language: The language to be used in the application.
+
+        :return: None.
         """
         self.json_translations = translations[language]
         self.json_change_video_attributes_app = self.json_translations[
@@ -599,6 +684,8 @@ class ChangeVideoAttributesApp(App):
     def create_menu_bar(self) -> None:
         """
         Creates and configures the menu bar to change between apps.
+
+        :return: None.
         """
         menu_bar, app_menu = super().create_menu_bar()
 
@@ -611,9 +698,11 @@ class ChangeVideoAttributesApp(App):
 
         self.root.config(menu=menu_bar)
 
-    def open_video_converter_app(self):
+    def open_video_converter_app(self) -> None:
         """
         Opens a new window that allows the user to convert video files.
+
+        :return: None.
         """
         # Destroy this window
         self.root.destroy()
@@ -628,11 +717,13 @@ class ChangeVideoAttributesApp(App):
 
         app.root.focus()
 
-    def create_verify_files_button(self):
+    def create_verify_files_button(self) -> None:
         """
         Verifies the input folder and extension entries, creates a list of input files,
         and updates the treeview with the input files. Returns True if successful,
         or None if the input folder or extension entries are empty.
+
+        :return: None.
         """
         json_widgets = self.json_translations["Widgets"]
         verify_files_button = ttk.Button(
@@ -650,6 +741,8 @@ class ChangeVideoAttributesApp(App):
     def create_change_button(self) -> None:
         """
         Creates and configures a change title button in the GUI.
+
+        :return: None.
         """
 
         change_button = ttk.Button(
@@ -667,6 +760,8 @@ class ChangeVideoAttributesApp(App):
     def create_merge_button(self) -> None:
         """
         Creates and configures a merge button in the GUI.
+
+        :return: None.
         """
         merge_button = ttk.Button(
             self.root,
@@ -685,6 +780,10 @@ class ChangeVideoAttributesApp(App):
         """
         Function to browse the folder and update the folder_entry
         with the selected folder path. No parameters and no return type.
+
+        :param folder_entry: The entry widget to update with the selected folder path.
+
+        :return: None.
         """
 
         folder = filedialog.askdirectory(mustexist=True)
@@ -693,14 +792,18 @@ class ChangeVideoAttributesApp(App):
 
     def execute_function(
         self, function_name: Literal["change_title", "merge_video_to_subtitle"]
-    ) -> bool:
+    ) -> None:
         """
         Function to execute the selected function.
+
+        :param function_name: The name of the function to execute.
+
+        :return: None.
         """
         input_files = super().execute_function(function_name)
 
         if not input_files:
-            return False
+            return
 
         input_files = [str(input_file) for input_file in input_files]
 
@@ -709,7 +812,7 @@ class ChangeVideoAttributesApp(App):
         binaries = check_ffmpeg_tkinter()
 
         if binaries is None:
-            return False
+            return
 
         if function_name == "change_title":
             video_adjuster.change_video_title_to_filename()
@@ -730,33 +833,60 @@ class ChangeVideoAttributesApp(App):
             else:
                 video_adjuster.merge_video_to_subtitle()
 
-        return True
-
-    def verify_files(self):
+    def verify_files(self) -> None:
         """
         Verifies the input folder and extension entries, creates a list of input files,
         and updates the treeview with the input files. Returns True if successful,
         or None if the input folder or extension entries are empty.
+
+        :raises tk.messagebox error: If the input folder does not exist.
+        :raises tk.messagebox info: If the number of input files is greater than 50.
+
+        :return: None.
         """
         if not self.input_folder_entry.get():
             return
 
-        input_files = []
-        for file in Path(self.input_folder_entry.get()).iterdir():
-            if is_video_or_audio_file(file):
-                input_files.append(file)
+        input_folder = Path(self.input_folder_entry.get())
 
-        self.create_treeview(input_files)
+        if not input_folder.exists():
+            messagebox.showerror(
+                self.json_translations["MessageBox"]["error"],
+                self.json_translations["MessageBox"]["error_folder_does_not_exist"],
+            )
+            return
+
+        input_files = list(input_folder.glob("*"))
+
+        if len(input_files) > 50:
+            messagebox.showinfo(
+                "Info",
+                "There are too many videos in this folder, it will take a while",
+                parent=self.root,
+            )
+
+        def check_files(files):
+            input_files = [file for file in files if is_video_or_audio_file(file)]
+
+            if input_files:
+                self.create_treeview(input_files)
+
+        thread = threading.Thread(target=check_files, args=(input_files,))
+        thread.start()
 
     def change_title(self) -> None:
         """
         Function to change the title of the video file to its filename.
+
+        :return: None.
         """
         self.execute_function("change_title")
 
-    def merge_video_to_subtitle(self):
+    def merge_video_to_subtitle(self) -> None:
         """
         Function to merge the subtitles with the video.
+
+        :return: None.
         """
         self.execute_function("merge_video_to_subtitle")
 
@@ -764,14 +894,27 @@ class ChangeVideoAttributesApp(App):
 class ToolTip:
     """Creates a tooltip widget."""
 
-    def __init__(self, widget, text: str):
-        """Initializes the tooltip widget."""
+    def __init__(self, widget: tk.Widget, text: str) -> None:
+        """
+        Initializes the tooltip widget.
+
+        :param widget: The widget to attach the tooltip to.
+        :param text: The text to display in the tooltip.
+
+        :return: None.
+        """
         self.widget = widget
         self.text = text
         self.tool_tip = None
 
-        def on_enter(event):
-            """Creates a tooltip when the mouse hovers over the widget."""
+        def on_enter(event: tk.Event) -> None:
+            """
+            Creates a tooltip when the mouse hovers over the widget.
+
+            :param event (tk.Event): The event that triggered the function.
+
+            :return: None.
+            """
             self.tool_tip = tk.Toplevel()
             self.tool_tip.overrideredirect(True)
             self.tool_tip.geometry(f"+{event.x_root+15}+{event.y_root+10}")
@@ -780,8 +923,14 @@ class ToolTip:
             label.pack()
             self.tool_tip.update()
 
-        def on_leave(event):  # pylint: disable=unused-argument
-            """Closes the tooltip."""
+        def on_leave(event: tk.Event) -> None:  # pylint: disable=unused-argument
+            """
+            Closes the tooltip.
+
+            :param event (tk.Event): The event that triggered the function.
+
+            :return: None.
+            """
             if self.tool_tip:
                 self.tool_tip.destroy()
 

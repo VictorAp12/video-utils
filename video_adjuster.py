@@ -8,16 +8,15 @@ from pathlib import Path
 import threading
 import tkinter as tk
 from tkinter import messagebox
+import subprocess
+from typing import List
 
-import chardet
-import ffmpeg
 from ffmpeg_progress_yield import FfmpegProgress
-
+import chardet
 
 from tk_progress_bar import CustomProgressBar
 
 from utils.threading_utils import CustomThread
-
 from utils.json_utils import (
     load_translations,
     load_last_used_settings,
@@ -39,7 +38,7 @@ def simplify_file_path(file_path: Path | str) -> str:
     return file_path.replace('"', "").replace("'", "").replace(",", "")
 
 
-def is_video_or_audio_file(file_path: Path | str):
+def is_video_or_audio_file(file_path: Path | str) -> bool:
     """
     Check if the given file is a video or audio file.
 
@@ -47,27 +46,57 @@ def is_video_or_audio_file(file_path: Path | str):
 
     :return: bool, True if the file is a video or audio file, False otherwise.
     """
-    try:
-        file_path = str(file_path)
-        if file_path.endswith(".srt"):
-            return False
 
-        ffmpeg.probe(file_path)
+    file_path = str(file_path)
+
+    excluded_extensions = (".srt", ".jpg", ".png", ".jpeg", ".gif", ".bmp")
+
+    if file_path.endswith(excluded_extensions):
+        return False
+
+    try:
+        if os.name == "nt":
+            # Option 1: Hide console window using startupinfo
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+
+            subprocess.run(
+                ["ffprobe", file_path],
+                startupinfo=startupinfo,
+                check=True,
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+
+            # Option 2: Hide console window using creationflags
+            # subprocess.run(["ffprobe", file_path], creationflags=subprocess.CREATE_NO_WINDOW)
+
+        else:
+            subprocess.run(
+                ["ffprobe", file_path],
+                check=True,
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
 
         return True
 
-    except ffmpeg.Error:
+    except subprocess.CalledProcessError:
         return False
 
 
-def encode_to_utf8(file_path: Path | str) -> bool | str:
+def encode_to_utf8(file_path: Path | str) -> str | None:
     """
     Encode the given file to UTF-8.
+
+    :param file_path: Path | str, The path to the file to be encoded.
     """
     file_path = str(file_path)
 
     if not file_path.endswith(".srt"):
-        return False
+        return None
 
     try:
         with open(file_path, "rb") as f:
@@ -87,7 +116,7 @@ def encode_to_utf8(file_path: Path | str) -> bool | str:
     with open(file_path, "w", encoding="utf-8") as f:
         f.write(content)
 
-    return True
+    return None
 
 
 class VideoAdjuster:
@@ -97,11 +126,11 @@ class VideoAdjuster:
 
     def __init__(
         self,
-        input_files: list[str],
+        input_files: List[str] | List[Path],
         output_folder: Path | str = Path.cwd(),
         master: tk.Tk | tk.Toplevel | None = None,
     ) -> None:
-        self.input_files = input_files
+        self.input_files = str(input_files)
         self.output_folder = Path(output_folder)
 
         self.total_files = len(input_files)
@@ -137,7 +166,9 @@ class VideoAdjuster:
         :return: ProgressBar
         """
 
-        progress_bar_obj = CustomProgressBar(master=self.master, with_pause_button=False)
+        progress_bar_obj = CustomProgressBar(
+            master=self.master, with_pause_button=False
+        )
         progress_bar_obj.create_progress_bar()
 
         progress_bar_obj.set_label_text(message)
@@ -153,8 +184,11 @@ class VideoAdjuster:
         Converts a video file from input_file to output_file using ffmpeg.
 
         :param conversion_type: "audio" or "video", The type of conversion.
+        :param output_extension: str, The extension of the output file.
 
-        :return: None
+        :raises tk.messagebox error: If conversion_type is video and output_extension is .mp3
+
+        :return: None.
         """
 
         if conversion_type not in ("audio", "video"):
@@ -265,7 +299,7 @@ class VideoAdjuster:
         A function to change the title of a video to match its filename,
         using a progress bar to display the progress of the operation.
 
-        :return: None
+        :return: None.
         """
 
         for i, input_file in enumerate(self.input_files):
@@ -312,6 +346,10 @@ class VideoAdjuster:
 
         :param subtitle_language: str, The language of the subtitle.
             This will appear in the video player available subtitles menu.
+
+        :raises tk.messagebox error: If the subtitle file does not exist.
+
+        :return: None.
         """
 
         for i, input_file in enumerate(self.input_files):
@@ -390,17 +428,22 @@ class VideoAdjuster:
 
 
 if __name__ == "__main__":
-    import glob
 
-    path = glob.glob("*.mkv")
+    videos = []
+    for video in os.listdir("./origin"):
+        video = os.path.join(os.getcwd(), "origin", video)
+        if is_video_or_audio_file(video):
+            videos.append(video)
+
+    print(*videos, sep="\n")
 
     progress_bar_obj_ = CustomProgressBar()
 
     progress_bar_obj_.create_progress_bar()
 
-    total = len(path)
+    # total = len(videos)
 
-    video_adjuster_obj_ = VideoAdjuster(input_files=path)
+    video_adjuster_obj_ = VideoAdjuster(input_files=videos)
 
     video_adjuster_obj_.change_video_title_to_filename()
     # video_adjuster_obj_.merge_video_to_subtitle()

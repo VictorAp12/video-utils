@@ -40,6 +40,11 @@ def check_ffmpeg_tkinter() -> str | None:
     """
     Check if the base directory environment variable is defined,
     and verify the location of the ffmpeg binaries.
+
+    :raises tk.messageboxes error: If the ffmpeg binaries cannot be found.
+    :raises tk.messageboxes error: If the ffmpeg binaries are located in a restricted directory.
+
+    :return: The path to the ffmpeg binaries if they pass all the checks, otherwise returns None.
     """
     load_dotenv(os.path.abspath(".env"), override=True, encoding="utf-8")
 
@@ -49,7 +54,7 @@ def check_ffmpeg_tkinter() -> str | None:
     json_translations = translations[load_last_used_settings()[0]]
 
     try:
-        binaries = check()
+        binaries = _check()
 
         return binaries
 
@@ -77,7 +82,7 @@ def check_ffmpeg_tkinter() -> str | None:
         return None
 
 
-def check():
+def _check():
     """
     Check if the base directory environment variable is defined,
     and verify the location of the ffmpeg binaries.

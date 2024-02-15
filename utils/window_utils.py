@@ -5,7 +5,9 @@ This module contains utility functions for working with tkinter windows.
 import tkinter as tk
 
 
-def center_window(window: tk.Tk | tk.Toplevel, master: tk.Tk | tk.Toplevel | None = None) -> None:
+def center_window(
+    window: tk.Tk | tk.Toplevel, master: tk.Tk | tk.Toplevel | None = None
+) -> None:
     """
     Center the given window on the screen, or relative to the provided master window.
 
@@ -13,7 +15,7 @@ def center_window(window: tk.Tk | tk.Toplevel, master: tk.Tk | tk.Toplevel | Non
     :param master: The master window relative to which the given
         window should be centered. Defaults to None.
 
-    :return: None
+    :return: None.
     """
 
     window.update_idletasks()
@@ -34,14 +36,14 @@ def center_window(window: tk.Tk | tk.Toplevel, master: tk.Tk | tk.Toplevel | Non
     window.geometry(f"{window_width}x{window_height}+{int(x)}+{int(y)}")
 
 
-def print_window_size(event) -> None:
+def print_window_size(event: tk.Event) -> None:
     """
     A method to print the window size based on the event parameters.
     In your tkinter window code, bind this method to the window's event
     Example:
         configure_binding = self.root.bind("<Configure>", print_window_size)
 
-    :param event: The event object containing width and height.
+    :param event (tk.Event): The event object containing width and height.
 
     :return: None.
     """

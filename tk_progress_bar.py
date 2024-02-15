@@ -77,7 +77,10 @@ class CustomProgressBar:
             self.root = tk.Tk()
 
         self.root.minsize(250, 80)
-        self.root.grab_set()
+
+        if master:
+            self.root.grab_set()
+
         self.root.wm_attributes("-topmost", True)
         self.root.lift()
 
@@ -133,7 +136,7 @@ class CustomProgressBar:
         """
         Creates a progress bar and displays it on the screen.
 
-        :return: None
+        :return: None.
         """
         self.root.title(self.json_progress_bar["ProgressBar_title"])
 
@@ -157,15 +160,25 @@ class CustomProgressBar:
             self.create_pause_button()
 
     def set_label_text(self, text: str) -> None:
-        """Function to set the text of the progress bar label."""
+        """
+        Function to set the text of the progress bar label.
+
+        :param text: The text to be displayed in the progress bar label.
+
+        :return: None.
+        """
         self.progress_bar_label.config(text=text)
 
         center_window(self.root, self.master)
 
         self.root.resizable(False, False)
 
-    def create_pause_button(self):
-        """Function to create the pause button."""
+    def create_pause_button(self) -> None:
+        """
+        Function to create the pause button.
+
+        :return: None.
+        """
         # the pause button should be on the left side of the cancel button
         self.pause_button.place(
             x=self.cancel_button.winfo_x()
@@ -175,7 +188,13 @@ class CustomProgressBar:
         )
 
     def update_progress(self, progress: int | float) -> None:
-        """Function to update the progress of the progress bar."""
+        """
+        Function to update the progress of the progress bar.
+
+        :param progress: The progress to be displayed in the progress bar.
+
+        :return: None.
+        """
         self.root.deiconify()
 
         self.progress_bar["value"] = int(progress)
@@ -187,7 +206,9 @@ class CustomProgressBar:
         """
         Updates the progress of a given ttk.Progressbar in a tk.Tk window.
 
-        :return: None
+        :param progress: The progress to be displayed in the progress bar.
+
+        :return: None.
         """
 
         # print(self.progress)
@@ -200,7 +221,7 @@ class CustomProgressBar:
         """
         Runs a sample progress bar in a window.
 
-        :return: None
+        :return: None.
         """
         self.root.deiconify()
 
@@ -226,6 +247,8 @@ class CustomProgressBar:
         Runs a command with progress updates in a window.
 
         :param command: FfmpegProgress - The command to run with progress.
+
+        :raises tk.messagebox Error: If the command fails to run.
 
         :return: bool - True if the command ran successfully, False otherwise.
         """
@@ -259,7 +282,11 @@ class CustomProgressBar:
         return True
 
     def _pause_or_play(self) -> None:
-        """Function to pause or play the progress bar."""
+        """
+        Function to pause or play the progress bar.
+
+        :return: None.
+        """
 
         if self.pause.get():
             self.pause_button.config(image=self.pause_btn_img)
@@ -269,7 +296,11 @@ class CustomProgressBar:
             self.pause.set(True)
 
     def _set_cancel_true(self) -> None:
-        """Function to close the window."""
+        """
+        Function to close the window.
+
+        :return: None.
+        """
         self.cancel.set(True)
 
         try:
@@ -282,7 +313,11 @@ class CustomProgressBar:
             pass
 
     def _set_cancel_all_true(self) -> None:
-        """Function to close the window and stop all the progresses"""
+        """
+        Function to close the window and stop all the progresses
+
+        :return: None.
+        """
         self.cancel_all.set(True)
 
         try:
