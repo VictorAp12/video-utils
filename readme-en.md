@@ -30,7 +30,7 @@ Contents:
 
 ## Installation
 
-The easiest way is simply by downloading the video utils installer windows 64 bits.exe.
+The easiest way is simply by downloading the video utils installer windows 64 bits.exe. [Click here to go to the download file](https://github.com/VictorAp12/video-utils/blob/main/video%20utils%20installer%20win%2064.exe)
 
 Or if you prefer to download the entire project:
 
