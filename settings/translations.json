@@ -37,8 +37,8 @@
         "Tooltips": {
             "verify_files_button_tooltip": "Verifica os arquivos válidos que estão na pasta selecionada.",
             "convert_button_tooltip": "Converte os arquivos selecionados para a extensão desejada.",
-            "change_button_tooltip": "Muda o atributo título do arquivos selecionados, para ficar igual ao nome do arquivo. Útil para quando se acessa o arquivo de um pc por streaming.\nPara mais informações leia a documentação do projeto indo no menu clicando em sobre.",
-            "merge_button_tooltip": "Junta o arquivo de vídeo com o arquivo de legenda(srt) dos arquivos selecionados. Somente funciona se o arquivo de legenda tiver o mesmo nome do arquivo de video.\nApenas use isso em arquivos mkv, caso contrário não funcionará."
+            "change_button_tooltip": "Muda o atributo título do arquivos selecionados, para ficar igual ao nome do arquivo.\nÚtil para quando se acessa o arquivo de um pc por streaming.\nPara mais informações leia a documentação do projeto indo no menu clicando em sobre.",
+            "merge_button_tooltip": "Junta o arquivo de vídeo com o arquivo de legenda(srt) dos arquivos selecionados.\nSomente funciona se o arquivo de legenda tiver o mesmo nome do arquivo de video.\nApenas use isso em arquivos mkv, caso contrário não funcionará."
         },
         "MessageBox": {
             "warning": "Atenção!",
@@ -102,8 +102,8 @@
         "Tooltips": {
             "verify_files_button_tooltip": "Verifys valid files in the selected folder.",
             "convert_button_tooltip": "Converts the selected files to the desired extension.",
-            "change_button_tooltip": "Changes the video title to the filename. Useful when accessing a video file from media streaming on pc.\nFor more information read the documentation in the menu clicking on about.",
-            "merge_button_tooltip": "Combines the video file with the subtitle file of the selected files. It only works if the subtitle file has the same name as the video file, it is in the same folder.\n Only use this in mkv files otherwise it will not work."
+            "change_button_tooltip": "Changes the video title to the filename.\nUseful when accessing a video file from media streaming on pc.\nFor more information read the documentation in the menu clicking on about.",
+            "merge_button_tooltip": "Combines the video file with the subtitle file of the selected files.\nIt only works if the subtitle file has the same name as the video file, it is in the same folder.\n Only use this in mkv files otherwise it will not work."
         },
         "MessageBox": {
             "warning": "Warning",
