@@ -51,7 +51,10 @@ class CustomProgressBar:
     """
 
     def __init__(
-        self, master: tk.Tk | tk.Toplevel | None = None, with_pause_button: bool = True
+        self,
+        master: tk.Tk | tk.Toplevel | None = None,
+        with_pause_button: bool = True,
+        start_minimized: bool = False,
     ) -> None:
         """
         Initializes the progress bar object.
@@ -78,11 +81,12 @@ class CustomProgressBar:
 
         self.root.minsize(250, 80)
 
-        if master:
-            self.root.grab_set()
+        # if master:
+        #     self.root.grab_set()
 
-        self.root.wm_attributes("-topmost", True)
-        self.root.lift()
+        if not start_minimized:
+            self.root.wm_attributes("-topmost", True)
+            self.root.lift()
 
         self.root.protocol("WM_DELETE_WINDOW", self._set_cancel_true)
 
@@ -108,6 +112,9 @@ class CustomProgressBar:
         self.cancel_all = BooleanVar()
         self.cancel_all.set(False)
 
+        self.minimize = BooleanVar()
+        self.minimize.set(False)
+
         if self.with_pause_button:
             self.play_btn_img = PhotoImage(file="./assets/play-button.png").subsample(
                 6, 6
@@ -131,6 +138,18 @@ class CustomProgressBar:
         self.progress_bar_percentage_label = ttk.Label(self.root, text="")
 
         # configure_binding = self.root.bind("<Configure>", print_window_size)
+
+        self.root.bind("<Unmap>", self.on_unmap)
+
+        self.root.bind("<Map>", self.on_map)
+
+    def on_unmap(self, event: tk.Event) -> None:  # pylint: disable=unused-argument
+        self.minimize.set(True)
+        self.root.iconify()
+
+    def on_map(self, event: tk.Event) -> None:  # pylint: disable=unused-argument
+        self.minimize.set(False)
+        self.root.deiconify()
 
     def create_progress_bar(self) -> None:
         """
@@ -173,6 +192,9 @@ class CustomProgressBar:
 
         self.root.resizable(False, False)
 
+        if self.minimize.get():
+            self.root.iconify()
+
     def create_pause_button(self) -> None:
         """
         Function to create the pause button.
@@ -195,12 +217,16 @@ class CustomProgressBar:
 
         :return: None.
         """
-        self.root.deiconify()
+        if self.minimize.get():
+            self.root.iconify()
+        else:
+            self.root.deiconify()
 
         self.progress_bar["value"] = int(progress)
         self.progress_bar_percentage_label.config(text=f"{progress}%", justify="center")
 
-        self.root.update_idletasks()
+        if not self.minimize.get():
+            self.root.update_idletasks()
 
     def _update_progress(self, progress: int | float) -> None:
         """
@@ -215,7 +241,10 @@ class CustomProgressBar:
         self.progress_bar["value"] = int(progress)
         self.progress_bar_percentage_label.config(text=f"{progress}%", justify="center")
 
-        self.root.update_idletasks()
+        if self.minimize.get():
+            self.root.iconify()
+        else:
+            self.root.update_idletasks()
 
     def run_progress_bar_sample(self) -> None:
         """
@@ -223,15 +252,22 @@ class CustomProgressBar:
 
         :return: None.
         """
-        self.root.deiconify()
+        if self.minimize.get():
+            self.root.iconify()
+        else:
+            self.root.deiconify()
 
         for progress in range(0, 101):
             time.sleep(0.1)
 
             if self.cancel.get():
+                self.cancel.set(False)
+                self.root.quit()
                 break
 
             if self.cancel_all.get():
+                self.cancel_all.set(False)
+                self.root.quit()
                 break
 
             if not self.pause.get():
@@ -252,18 +288,24 @@ class CustomProgressBar:
 
         :return: bool - True if the command ran successfully, False otherwise.
         """
-        self.root.deiconify()
+        if self.minimize.get():
+            self.root.iconify()
+
+        else:
+            self.root.deiconify()
 
         try:
             for progress in command.run_command_with_progress({"shell": True}):
                 if self.cancel.get():
                     command.quit_gracefully()
                     self.root.quit()
+                    self.cancel.set(False)
                     break
 
                 if self.cancel_all.get():
                     command.quit_gracefully()
                     self.root.quit()
+                    self.cancel_all.set(False)
                     return False
 
                 self.root.after(10, self._update_progress, progress)

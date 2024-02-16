@@ -7,7 +7,6 @@ import os
 import sys
 from abc import ABC, abstractmethod
 from pathlib import Path
-import threading
 from typing import List, Literal, Tuple
 import tkinter as tk
 from tkinter import messagebox, simpledialog, ttk, filedialog
@@ -21,6 +20,7 @@ from utils.json_utils import (
     save_last_used_settings,
     load_translations,
 )
+from utils.threading_utils import CustomThread
 from utils.window_utils import center_window
 from utils.ffmpeg_utils import configure, check_ffmpeg_tkinter
 from video_adjuster import is_video_or_audio_file, VideoAdjuster
@@ -618,14 +618,19 @@ class VideoConverterApp(App):
                 parent=self.root,
             )
 
-        def check_files(files: List[Path]) -> None:
+        def check_files(files: List[Path]) -> List[Path]:
             input_files = [file for file in files if is_video_or_audio_file(file)]
 
-            if input_files:
-                self.create_treeview(input_files)
+            return input_files
 
-        thread = threading.Thread(target=check_files, args=(input_files,))
+        thread = CustomThread(target=check_files, args=(input_files,))
         thread.start()
+
+        result = thread.join()
+
+        input_files = result
+        if input_files:
+            self.create_treeview(input_files)
 
     def convert_file(self) -> None:
         """
@@ -865,14 +870,20 @@ class ChangeVideoAttributesApp(App):
                 parent=self.root,
             )
 
-        def check_files(files):
+        def check_files(files: List[Path]) -> List[Path]:
             input_files = [file for file in files if is_video_or_audio_file(file)]
 
-            if input_files:
-                self.create_treeview(input_files)
+            return input_files
 
-        thread = threading.Thread(target=check_files, args=(input_files,))
+
+        thread = CustomThread(target=check_files, args=(input_files,))
         thread.start()
+
+        result = thread.join()
+
+        input_files = result
+        if input_files:
+                self.create_treeview(input_files)
 
     def change_title(self) -> None:
         """

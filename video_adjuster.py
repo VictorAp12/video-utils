@@ -119,6 +119,47 @@ def encode_to_utf8(file_path: Path | str) -> str | None:
     return None
 
 
+def extract_srt_from_mkv(mkv_file: Path, destiny_folder: Path) -> Path | None:
+    """
+    Extract the subtitles from the given MKV file.
+
+    :param mkv_file: Path, The path to the MKV file.
+    :param destiny_folder: Path, The path to the folder where the extracted SRT file will be saved.
+
+    :return: Path, The path to the extracted SRT file.
+    """
+    dot_srt_file = mkv_file.name + ".srt"
+
+    output_file = destiny_folder / dot_srt_file
+
+    extract_command = [
+        "ffmpeg",
+        "-i",
+        str(mkv_file),
+        "-map",
+        "0:s:0",
+        str(output_file),
+    ]
+
+    startupinfo = subprocess.STARTUPINFO()
+    startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+
+    try:
+        subprocess.run(
+            extract_command,
+            startupinfo=startupinfo,
+            check=True,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+
+    except subprocess.CalledProcessError:
+        return None
+
+    return output_file
+
+
 class VideoAdjuster:
     """
     This class provides methods for adjusting videos.
@@ -130,7 +171,7 @@ class VideoAdjuster:
         output_folder: Path | str = Path.cwd(),
         master: tk.Tk | tk.Toplevel | None = None,
     ) -> None:
-        self.input_files = str(input_files)
+        self.input_files = [str(input_file) for input_file in input_files]
         self.output_folder = Path(output_folder)
 
         self.total_files = len(input_files)
@@ -157,11 +198,9 @@ class VideoAdjuster:
 
         return progress_thread
 
-    def setup_progress_bar(self, message: str) -> CustomProgressBar:
+    def setup_progress_bar(self) -> CustomProgressBar:
         """
         Sets up the progress bar object.
-
-        :param message: str, The message to display in the progress bar.
 
         :return: ProgressBar
         """
@@ -170,8 +209,6 @@ class VideoAdjuster:
             master=self.master, with_pause_button=False
         )
         progress_bar_obj.create_progress_bar()
-
-        progress_bar_obj.set_label_text(message)
 
         return progress_bar_obj
 
@@ -194,6 +231,8 @@ class VideoAdjuster:
         if conversion_type not in ("audio", "video"):
             return
 
+        progress_bar_obj = self.setup_progress_bar()
+
         for i, input_file in enumerate(self.input_files):
             output_file = (
                 f"{self.output_folder}\\"
@@ -206,7 +245,7 @@ class VideoAdjuster:
                 filename=filename, current_file=i + 1, total_files=self.total_files
             )
 
-            progress_bar_obj = self.setup_progress_bar(message)
+            progress_bar_obj.set_label_text(message)
 
             if conversion_type == "audio":
                 if not output_file.endswith(".mp3"):
@@ -252,6 +291,9 @@ class VideoAdjuster:
                     )
                     return
 
+                if input_file.endswith(".mkv"):
+                    extract_srt_from_mkv(Path(input_file), Path(output_file).parent)
+
                 try:
                     command = FfmpegProgress(
                         [
@@ -285,14 +327,32 @@ class VideoAdjuster:
                         ]
                     )
 
+            if Path(output_file).exists():
+                progress_bar_obj.root.withdraw()
+                delete_file = messagebox.askyesno(
+                    translations["MessageBox"]["warning"],
+                    message=translations["MessageBox"]["output_file_exists"].format(
+                        output_file=Path(output_file).name
+                    ),
+                    parent=progress_bar_obj.root,
+                )
+
+                if delete_file:
+                    Path(output_file).unlink(missing_ok=True)
+                else:
+                    progress_bar_obj.root.deiconify()
+                    continue
+
             progress_thread = self.thread_function(progress_bar_obj, command)
 
             return_value = progress_thread.join()
 
-            progress_bar_obj.root.destroy()
-
             if not return_value:
+                progress_bar_obj.root.destroy()
                 break
+
+        if progress_bar_obj.root:
+            progress_bar_obj.root.destroy()
 
     def change_video_title_to_filename(self) -> None:
         """
@@ -301,6 +361,8 @@ class VideoAdjuster:
 
         :return: None.
         """
+
+        progress_bar_obj = self.setup_progress_bar()
 
         for i, input_file in enumerate(self.input_files):
             filename = Path(input_file).name
@@ -313,7 +375,7 @@ class VideoAdjuster:
                 filename=filename, current_file=i + 1, total_files=self.total_files
             )
 
-            progress_bar_obj = self.setup_progress_bar(message)
+            progress_bar_obj.set_label_text(message)
 
             command = FfmpegProgress(
                 [
@@ -335,10 +397,12 @@ class VideoAdjuster:
 
             return_value = progress_thread.join()
 
-            progress_bar_obj.root.destroy()
-
             if not return_value:
+                progress_bar_obj.root.destroy()
                 break
+
+        if progress_bar_obj.root:
+            progress_bar_obj.root.destroy()
 
     def merge_video_to_subtitle(self, subtitle_language: str = "Pt-BR") -> None:
         """
@@ -351,6 +415,8 @@ class VideoAdjuster:
 
         :return: None.
         """
+
+        progress_bar_obj = self.setup_progress_bar()
 
         for i, input_file in enumerate(self.input_files):
 
@@ -366,7 +432,7 @@ class VideoAdjuster:
                 filename=filename, current_file=i + 1, total_files=self.total_files
             )
 
-            progress_bar_obj = self.setup_progress_bar(message)
+            progress_bar_obj.set_label_text(message)
 
             # output file will be like "video.srt.mkv"
             merged = (
@@ -421,10 +487,12 @@ class VideoAdjuster:
 
             return_value = progress_thread.join()
 
-            progress_bar_obj.root.destroy()
-
             if not return_value:
+                progress_bar_obj.root.destroy()
                 break
+
+        if progress_bar_obj.root:
+            progress_bar_obj.root.destroy()
 
 
 if __name__ == "__main__":

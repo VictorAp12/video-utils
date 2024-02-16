@@ -38,13 +38,14 @@
             "verify_files_button_tooltip": "Verifica os arquivos válidos que estão na pasta selecionada.",
             "convert_button_tooltip": "Converte os arquivos selecionados para a extensão desejada.",
             "change_button_tooltip": "Muda o atributo título do arquivos selecionados, para ficar igual ao nome do arquivo. Útil para quando se acessa o arquivo de um pc por streaming.\nPara mais informações leia a documentação do projeto indo no menu clicando em sobre.",
-            "merge_button_tooltip": "Junta o arquivo de vídeo com o arquivo de legenda(srt) dos arquivos selecionados."
+            "merge_button_tooltip": "Junta o arquivo de vídeo com o arquivo de legenda(srt) dos arquivos selecionados. Somente funciona se o arquivo de legenda tiver o mesmo nome do arquivo de video.\nApenas use isso em arquivos mkv, caso contrário não funcionará."
         },
         "MessageBox": {
             "warning": "Atenção!",
             "verify_button_not_clicked": "Antes de realizar a ação, clique em \"Verificar Arquivos\".",
             "info": "Informação!",
             "too_many_files": "Há muitos arquivos na pasta selecionada, levará um tempo para concluir a ação.",
+            "output_file_exists": "O arquivo de destino \"{output_file}\" já existe!\n Deseja sobrescrevê-lo?",
             "error": "Erro!",
             "error_folder_does_not_exist": "A pasta selecionada não existe!",
             "error_treeview_files_not_found": "Nenhum arquivo encontrado na pasta selecionada!",
@@ -102,13 +103,14 @@
             "verify_files_button_tooltip": "Verifys valid files in the selected folder.",
             "convert_button_tooltip": "Converts the selected files to the desired extension.",
             "change_button_tooltip": "Changes the video title to the filename. Useful when accessing a video file from media streaming on pc.\nFor more information read the documentation in the menu clicking on about.",
-            "merge_button_tooltip": "Combines the video file with the subtitle file of the selected files."
+            "merge_button_tooltip": "Combines the video file with the subtitle file of the selected files. It only works if the subtitle file has the same name as the video file, it is in the same folder.\n Only use this in mkv files otherwise it will not work."
         },
         "MessageBox": {
             "warning": "Warning",
             "verify_button_not_clicked": "click on \"Verify Files\" before performing an action.",
             "info": "Information",
             "too_many_files": "There are too many files in the selected folder, it will take a while",
+            "output_file_exists": "The output file \"{output_file}\" already exists!\n Do you want to overwrite it?",
             "error": "Error",
             "error_folder_does_not_exist": "The selected folder does not exist!",
             "error_treeview_files_not_found": "No files found in the selected folder!",
