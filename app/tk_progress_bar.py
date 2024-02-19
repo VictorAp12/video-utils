@@ -4,7 +4,7 @@ A module to create a progress bar in a Tkinter window.
 
 import time
 import tkinter as tk
-from tkinter import ttk, PhotoImage, BooleanVar, messagebox
+from tkinter import ttk, PhotoImage, BooleanVar
 
 from ffmpeg_progress_yield import FfmpegProgress
 from utils.threading_utils import CustomThread
@@ -144,10 +144,20 @@ class CustomProgressBar:
         self.root.bind("<Map>", self.on_map)
 
     def on_unmap(self, event: tk.Event) -> None:  # pylint: disable=unused-argument
+        """
+        Function to minimize the progress bar when it is unmapped.
+
+        :return: None.
+        """
         self.minimize.set(True)
         self.root.iconify()
 
     def on_map(self, event: tk.Event) -> None:  # pylint: disable=unused-argument
+        """
+        Function to minimize the progress bar when it is unmapped.
+
+        :return: None.
+        """
         self.minimize.set(False)
         self.root.deiconify()
 
@@ -278,13 +288,13 @@ class CustomProgressBar:
 
         self.root.quit()
 
-    def run_ffmpeg_with_progress(self, command: FfmpegProgress) -> bool:
+    def run_ffmpeg_with_progress(self, command: FfmpegProgress) -> bool | str:
         """
         Runs a command with progress updates in a window.
 
         :param command: FfmpegProgress - The command to run with progress.
 
-        :raises tk.messagebox Error: If the command fails to run.
+        :raises string error: If the command fails to run.
 
         :return: bool - True if the command ran successfully, False otherwise.
         """
@@ -312,12 +322,8 @@ class CustomProgressBar:
 
         except RuntimeError:
             self.root.withdraw()
-            messagebox.showerror(
-                translations["MessageBox"]["error"],
-                message=translations["MessageBox"]["error_ffmpeg_command"],
-            )
-            self.root.destroy()
-            return False
+            self.root.quit()
+            return "error"
 
         self.root.quit()
 

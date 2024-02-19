@@ -9,33 +9,34 @@ TRANSLATIONS_PATH = "settings/translations.json"
 USER_SETTINGS = "settings/user_settings.json"
 
 
-def load_last_used_settings() -> (
-    Tuple[Literal["pt_BR", "en_US"], Literal["default", "black"]]
-):
+def load_last_used_settings() -> Tuple[
+    Literal["pt_BR", "en_US"],
+    Literal["default", "black"],
+    Literal["VideoConverterApp", "ChangeVideoAttributesApp"],
+]:
     """
     Loads the last used theme and language from the user_settings.json file.
 
-    :return: A tuple containing the last used theme and language.
+    :return: A tuple containing the last used theme, language and app.
     """
     with open(USER_SETTINGS, "r", encoding="utf-8") as f:
         user_settings = json.load(f)
         language = user_settings["last_used_language"]
 
-        if not language:
-            language = "pt_BR"
-
         theme = user_settings["last_used_theme"]
 
-        if not theme:
-            theme = "default"
+        app = user_settings["last_used_app"]
 
-    return language, theme
+    f.close()
+
+    return language, theme, app
 
 
 def save_last_used_settings(
     key: Literal["last_used_theme", "last_used_language"],
     theme: Literal["default", "black"] | None = None,
     language: Literal["pt_BR", "en_US"] | None = None,
+    used_app: Literal["VideoConverterApp", "ChangeVideoAttributesApp"] | None = None,
 ) -> None:
     """
     Saves the last used theme and language to the user_settings.json file.
@@ -47,15 +48,19 @@ def save_last_used_settings(
     :return: None.
     """
 
-    last_language, last_theme = load_last_used_settings()
+    with open(USER_SETTINGS, "r", encoding="utf-8") as f:
+        user_settings = json.load(f)
+
+    if key == "last_used_language" and language is not None:
+        user_settings["last_used_language"] = language
+
+    if key == "last_used_theme" and theme is not None:
+        user_settings["last_used_theme"] = theme
+
+    user_settings["last_used_app"] = used_app
 
     with open(USER_SETTINGS, "w", encoding="utf-8") as f:
-
-        if key == "last_used_language" and language is not None:
-            json.dump({key: language, "last_used_theme": last_theme}, f, indent=4)
-
-        if key == "last_used_theme" and theme is not None:
-            json.dump({"last_used_language": last_language, key: theme}, f, indent=4)
+        json.dump(user_settings, f, indent=4)
 
 
 def load_translations() -> dict:

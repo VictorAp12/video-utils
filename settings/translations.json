@@ -18,7 +18,12 @@
             "output_folder_label": "Pasta de destino",
             "browse_output_button": "Procurar",
             "verify_files_button": "Verificar Arquivos",
-            "treeview_column1": "Nome do Arquivo"
+            "treeview_column1": "Nome do Arquivo",
+            "select_all_button": "Selecionar tudo",
+            "unselect_all_button": "Desmarcar tudo",
+            "open_folder_button": "Abrir pasta",
+            "found_files_label": "{count} Arquivo(s) encontrado(s)",
+            "selected_files_label": "{count} Arquivo(s) selecionado(s)"
         },
         "Video and Audio Converter": {
             "VideoConverterApp_title": "Conversor de Videos e Audios",
@@ -31,14 +36,18 @@
             "ChangeVideoAttributesApp_title": "Mudar atributos de vídeos",
             "change_button": "Mudar Título",
             "merge_button": "Juntar vídeo e legenda",
-            "simple_dialog_title": "Legenda",
-            "simple_dialog_text": "Digite o idioma da legenda (padrão: pt-BR)"
+            "extract_button": "Extrair Legenda de Vídeo",
+            "simple_dialog_merge_title": "Legenda",
+            "simple_dialog_merge_text": "Digite o idioma da legenda (padrão: pt-BR)",
+            "simple_dialog_extract_title": "Extrair Legenda de Vídeo",
+            "simple_dialog_extract_text": "Digite a extensão da legenda (padrão: srt)"
         },
         "Tooltips": {
             "verify_files_button_tooltip": "Verifica os arquivos válidos que estão na pasta selecionada.",
             "convert_button_tooltip": "Converte os arquivos selecionados para a extensão desejada.",
             "change_button_tooltip": "Muda o atributo título do arquivos selecionados, para ficar igual ao nome do arquivo.\nÚtil para quando se acessa o arquivo de um pc por streaming.\nPara mais informações leia a documentação do projeto indo no menu clicando em sobre.",
-            "merge_button_tooltip": "Junta o arquivo de vídeo com o arquivo de legenda(srt) dos arquivos selecionados.\nSomente funciona se o arquivo de legenda tiver o mesmo nome do arquivo de video.\nApenas use isso em arquivos mkv, caso contrário não funcionará."
+            "merge_button_tooltip": "Junta o arquivo de vídeo com o arquivo de legenda dos arquivos selecionados.\nSomente funciona se o arquivo de legenda tiver o mesmo nome do arquivo de video.\nApenas use isso em arquivos mkv, caso contrário não funcionará.",
+            "extract_button_tooltip": "Extrai a legenda de um arquivo de vídeo e salva em um arquivo"
         },
         "MessageBox": {
             "warning": "Atenção!",
@@ -48,13 +57,16 @@
             "output_file_exists": "O arquivo de destino \"{output_file}\" já existe!\n Deseja sobrescrevê-lo?",
             "error": "Erro!",
             "error_folder_does_not_exist": "A pasta selecionada não existe!",
+            "error_files_not_found": "Nenhum arquivo com a extensão procurada encontrado na pasta selecionada!",
             "error_treeview_files_not_found": "Nenhum arquivo encontrado na pasta selecionada!",
             "error_missing_field": "Por favor preencha todos os campos obrigatórios antes de prosseguir com a ação.",
             "error_convert_video_mp3": "Não é possível converter para um vídeo mp3!\n mp3 é somente para áudio.",
             "error_subtitle_not_found": "O arquivo de legenda \"{filename}\" não foi encontrado!\nEle deve possuir o mesmo nome que o arquivo de video.",
             "error_ffmpeg_not_found": "Pasta do ffmpeg não encontrada! Verifique e selecione o caminho do ffmpeg.\nÉ parecido com isso C:\\Program Files\\ffmpeg.\nSe ainda não instalou instale no site www.ffmpeg.org e coloque no path do sistema.",
             "error_ffmpeg_restricted": "A pasta do ffmpeg não pode estar dentro de system32 ou qualquer outro diretório restrito. Verifique o caminho do ffmpeg e tente novamente.",
-            "error_ffmpeg_command": "Erro durante a execução do comando!\nVerifique se a extensão desejada é valida, se é possível converter para video/audio\ne se o arquivo de entrada não está corrompido."
+            "error_ffmpeg_command": "Erro durante a execução do comando!\nVerifique se a extensão desejada é valida, se é possível converter para video/audio\ne se o arquivo de entrada não está corrompido.",
+            "success": "Concluído!",
+            "success_message": "As ações foram concluídas com sucesso!"
         },
         "ProgressBar": {
             "ProgressBar_title": "Progresso",
@@ -83,7 +95,12 @@
             "output_folder_label": "Output Folder",
             "browse_output_button": "Browse",
             "verify_files_button": "Verify Files",
-            "treeview_column1": "File Name"
+            "treeview_column1": "File Name",
+            "select_all_button": "Select All",
+            "unselect_all_button": "Unselect All",
+            "open_folder_button": "Open Folder",
+            "found_files_label": "{count} File(s) found",
+            "selected_files_label": "{count} File(s) selected"
         },
         "Video and Audio Converter": {
             "VideoConverterApp_title": "Video and Audio Converter",
@@ -96,14 +113,18 @@
             "ChangeVideoAttributesApp_title": "Change Video Attributes",
             "change_button": "Change Title",
             "merge_button": "Combine video and subtitles",
-            "simple_dialog_title": "Subtitle",
-            "simple_dialog_text": "Enter the subtitle language (default: pt-BR)"
+            "extract_button": "Extract Subtitle",
+            "simple_dialog_merge_title": "Subtitle",
+            "simple_dialog_merge_text": "Enter the subtitle language (default: pt-BR)",
+            "simple_dialog_extract_title": "Extract subtitle from video",
+            "simple_dialog_extract_text": "Enter the subtitle extension (default: srt)"
         },
         "Tooltips": {
             "verify_files_button_tooltip": "Verifys valid files in the selected folder.",
             "convert_button_tooltip": "Converts the selected files to the desired extension.",
             "change_button_tooltip": "Changes the video title to the filename.\nUseful when accessing a video file from media streaming on pc.\nFor more information read the documentation in the menu clicking on about.",
-            "merge_button_tooltip": "Combines the video file with the subtitle file of the selected files.\nIt only works if the subtitle file has the same name as the video file, it is in the same folder.\n Only use this in mkv files otherwise it will not work."
+            "merge_button_tooltip": "Combines the video file with the subtitle file of the selected files.\nIt only works if the subtitle file has the same name as the video file, it is in the same folder.\n Only use this in mkv files otherwise it will not work.",
+            "extract_button_tooltip": "Extracts the subtitle from the video file and saves it in a subtitle file"
         },
         "MessageBox": {
             "warning": "Warning",
@@ -113,13 +134,16 @@
             "output_file_exists": "The output file \"{output_file}\" already exists!\n Do you want to overwrite it?",
             "error": "Error",
             "error_folder_does_not_exist": "The selected folder does not exist!",
+            "error_files_not_found": "No files found with the searched extension in the selected folder!",
             "error_treeview_files_not_found": "No files found in the selected folder!",
             "error_missing_field": "Please fill out all the required fields before proceeding with the action",
             "error_convert_video_mp3": "It is not possible to convert to mp3 video!\n mp3 is only for audio conversion.",
             "error_subtitle_not_found": "\"{filename}\" subtitle file not found!\nIt should have the same name as the video file.",
             "error_ffmpeg_not_found": "ffmpeg folder not found! Check and select the ffmpeg path.\nIt's like this: C:\\Program Files\\ffmpeg.\nIf it is not installed, install it from the website www.ffmpeg.org and put the path system.",
             "error_ffmpeg_restricted": "The ffmpeg binaries cannot be under system32 directory or any other restricted folder. Check the ffmpeg path and try again.",
-            "error_ffmpeg_command": "Error during the ffmpeg command!\nCheck if the desired extension is valid, if it is possible to convert to video/audio\nand if the input file is not corrupted."
+            "error_ffmpeg_command": "Error during the ffmpeg command!\nCheck if the desired extension is valid, if it is possible to convert to video/audio\nand if the input file is not corrupted.",
+            "success": "Success",
+            "success_message": "Actions were completed successfully!"
         },
         "ProgressBar": {
             "ProgressBar_title": "Progress",

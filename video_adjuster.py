@@ -3,23 +3,24 @@ This module contains a application for changing the title of video files to thei
 """
 
 import os
-from datetime import datetime
 from pathlib import Path
 import threading
 import tkinter as tk
-from tkinter import messagebox
-import subprocess
+from tkinter import TclError, messagebox
 from typing import List
 
 from ffmpeg_progress_yield import FfmpegProgress
 import chardet
 
-from tk_progress_bar import CustomProgressBar
+from app.tk_progress_bar import CustomProgressBar
 
 from utils.threading_utils import CustomThread
 from utils.json_utils import (
     load_translations,
     load_last_used_settings,
+)
+from utils.ffmpeg_utils import (
+    is_video_or_audio_file,
 )
 
 language = load_last_used_settings()[0]
@@ -38,65 +39,13 @@ def simplify_file_path(file_path: Path | str) -> str:
     return file_path.replace('"', "").replace("'", "").replace(",", "")
 
 
-def is_video_or_audio_file(file_path: Path | str) -> bool:
-    """
-    Check if the given file is a video or audio file.
-
-    :param file_path: Path | str, The path to the file to be checked.
-
-    :return: bool, True if the file is a video or audio file, False otherwise.
-    """
-
-    file_path = str(file_path)
-
-    excluded_extensions = (".srt", ".jpg", ".png", ".jpeg", ".gif", ".bmp")
-
-    if file_path.endswith(excluded_extensions):
-        return False
-
-    try:
-        if os.name == "nt":
-            # Option 1: Hide console window using startupinfo
-            startupinfo = subprocess.STARTUPINFO()
-            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-
-            subprocess.run(
-                ["ffprobe", file_path],
-                startupinfo=startupinfo,
-                check=True,
-                shell=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-            )
-
-            # Option 2: Hide console window using creationflags
-            # subprocess.run(["ffprobe", file_path], creationflags=subprocess.CREATE_NO_WINDOW)
-
-        else:
-            subprocess.run(
-                ["ffprobe", file_path],
-                check=True,
-                shell=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-            )
-
-        return True
-
-    except subprocess.CalledProcessError:
-        return False
-
-
-def encode_to_utf8(file_path: Path | str) -> str | None:
+def encode_subtitle_to_utf8(file_path: Path | str) -> str | None:
     """
     Encode the given file to UTF-8.
 
     :param file_path: Path | str, The path to the file to be encoded.
     """
     file_path = str(file_path)
-
-    if not file_path.endswith(".srt"):
-        return None
 
     try:
         with open(file_path, "rb") as f:
@@ -119,47 +68,7 @@ def encode_to_utf8(file_path: Path | str) -> str | None:
     return None
 
 
-def extract_srt_from_mkv(mkv_file: Path, destiny_folder: Path) -> Path | None:
-    """
-    Extract the subtitles from the given MKV file.
-
-    :param mkv_file: Path, The path to the MKV file.
-    :param destiny_folder: Path, The path to the folder where the extracted SRT file will be saved.
-
-    :return: Path, The path to the extracted SRT file.
-    """
-    dot_srt_file = mkv_file.name + ".srt"
-
-    output_file = destiny_folder / dot_srt_file
-
-    extract_command = [
-        "ffmpeg",
-        "-i",
-        str(mkv_file),
-        "-map",
-        "0:s:0",
-        str(output_file),
-    ]
-
-    startupinfo = subprocess.STARTUPINFO()
-    startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-
-    try:
-        subprocess.run(
-            extract_command,
-            startupinfo=startupinfo,
-            check=True,
-            shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-        )
-
-    except subprocess.CalledProcessError:
-        return None
-
-    return output_file
-
-
+# Todo: Add subtitle converter
 class VideoAdjuster:
     """
     This class provides methods for adjusting videos.
@@ -228,11 +137,9 @@ class VideoAdjuster:
         :return: None.
         """
 
-        if conversion_type not in ("audio", "video"):
-            return
-
         progress_bar_obj = self.setup_progress_bar()
 
+        success = True
         for i, input_file in enumerate(self.input_files):
             output_file = (
                 f"{self.output_folder}\\"
@@ -259,11 +166,23 @@ class VideoAdjuster:
                             "aac",
                             "-q:a",
                             "0",
-                            "-n",
                             output_file,
+                            "-y",
                         ]
                     )
 
+                    command2 = FfmpegProgress(
+                        [
+                            "ffmpeg",
+                            "-i",
+                            input_file,
+                            "-vn",
+                            "-acodec",
+                            "libvorbis",
+                            output_file,
+                            "-y",
+                        ]
+                    )
                 else:
                     Path(output_file).unlink(missing_ok=True)
 
@@ -277,10 +196,12 @@ class VideoAdjuster:
                             "mp3",
                             "-q:a",
                             "0",
-                            "-n",
                             output_file,
+                            "-y",
                         ]
                     )
+
+                    command2 = None
 
             elif conversion_type == "video":
                 if output_file.endswith(".mp3"):
@@ -289,43 +210,40 @@ class VideoAdjuster:
                         translations["MessageBox"]["error"],
                         message=translations["MessageBox"]["error_convert_video_mp3"],
                     )
+                    success = False
                     return
 
-                if input_file.endswith(".mkv"):
-                    extract_srt_from_mkv(Path(input_file), Path(output_file).parent)
+                command = FfmpegProgress(
+                    [
+                        "ffmpeg",
+                        "-i",
+                        input_file,
+                        "-c:v",
+                        "copy",
+                        "-c:a",
+                        "copy",
+                        "-c:s",
+                        "mov_text" if output_file.endswith(".mp4") else "srt",
+                        "-map",
+                        "0",
+                        output_file,
+                        "-y",
+                    ]
+                )
 
-                try:
-                    command = FfmpegProgress(
-                        [
-                            "ffmpeg",
-                            "-i",
-                            input_file,
-                            "-c:v",
-                            "copy",
-                            "-c:a",
-                            "copy",
-                            output_file,
-                        ]
-                    )
-
-                except Exception as e:
-                    with open("log.txt", "a", encoding="utf-8") as f:
-                        f.write(f"{datetime.now()} - {e}\n")
-
-                    Path(output_file).unlink(missing_ok=True)
-
-                    command = FfmpegProgress(
-                        [
-                            "ffmpeg",
-                            "-i",
-                            input_file,
-                            "-c:v",
-                            "copy",
-                            "-c:a",
-                            "aac",
-                            output_file,
-                        ]
-                    )
+                command2 = FfmpegProgress(
+                    [
+                        "ffmpeg",
+                        "-i",
+                        input_file,
+                        "-c:v",
+                        "copy",
+                        "-c:a",
+                        "aac",
+                        output_file,
+                        "-y",
+                    ]
+                )
 
             if Path(output_file).exists():
                 progress_bar_obj.root.withdraw()
@@ -349,10 +267,49 @@ class VideoAdjuster:
 
             if not return_value:
                 progress_bar_obj.root.destroy()
+                success = False
                 break
 
+            if return_value == "error":
+                if command2:
+                    progress_bar_obj.root.deiconify()
+                    progress_thread = self.thread_function(progress_bar_obj, command2)
+
+                    return_value = progress_thread.join()
+
+                    if not return_value or return_value == "error":
+                        messagebox.showerror(
+                            translations["MessageBox"]["error"],
+                            message=message
+                            + "\n\n"
+                            + translations["MessageBox"]["error_ffmpeg_command"],
+                        )
+                        progress_bar_obj.root.destroy()
+                        success = False
+                        break
+
+                else:
+                    messagebox.showerror(
+                        translations["MessageBox"]["error"],
+                        message=message
+                        + "\n\n"
+                        + translations["MessageBox"]["error_ffmpeg_command"],
+                    )
+                    progress_bar_obj.root.destroy()
+                    success = False
+                    break
+
         if progress_bar_obj.root:
-            progress_bar_obj.root.destroy()
+            try:
+                progress_bar_obj.root.destroy()
+            except TclError:
+                pass
+
+        if success:
+            messagebox.showinfo(
+                translations["MessageBox"]["success"],
+                message=translations["MessageBox"]["success_message"],
+            )
 
     def change_video_title_to_filename(self) -> None:
         """
@@ -364,6 +321,7 @@ class VideoAdjuster:
 
         progress_bar_obj = self.setup_progress_bar()
 
+        success = True
         for i, input_file in enumerate(self.input_files):
             filename = Path(input_file).name
 
@@ -397,12 +355,28 @@ class VideoAdjuster:
 
             return_value = progress_thread.join()
 
-            if not return_value:
+            if not return_value or return_value == "error":
+                messagebox.showerror(
+                    translations["MessageBox"]["error"],
+                    message=message
+                    + "\n\n"
+                    + translations["MessageBox"]["error_ffmpeg_command"],
+                )
                 progress_bar_obj.root.destroy()
+                success = False
                 break
 
         if progress_bar_obj.root:
-            progress_bar_obj.root.destroy()
+            try:
+                progress_bar_obj.root.destroy()
+            except TclError:
+                pass
+
+        if success:
+            messagebox.showinfo(
+                translations["MessageBox"]["success"],
+                message=translations["MessageBox"]["success_message"],
+            )
 
     def merge_video_to_subtitle(self, subtitle_language: str = "Pt-BR") -> None:
         """
@@ -418,6 +392,7 @@ class VideoAdjuster:
 
         progress_bar_obj = self.setup_progress_bar()
 
+        success = True
         for i, input_file in enumerate(self.input_files):
 
             # Get rid of quote characters
@@ -440,9 +415,9 @@ class VideoAdjuster:
             )
 
             # Assume the subtitles have the same name as the video file
-            subtitles = input_file.replace(filename, name + ".srt")
+            subtitle = input_file.replace(filename, name + ".srt")
 
-            subtitle_exists = encode_to_utf8(subtitles)
+            subtitle_exists = encode_subtitle_to_utf8(subtitle)
 
             if isinstance(subtitle_exists, str):
                 progress_bar_obj.root.destroy()
@@ -452,12 +427,12 @@ class VideoAdjuster:
                 )
                 continue
 
-            if os.path.exists(subtitles):
-                os.rename(subtitles, simplify_file_path(subtitles))
-                subtitles = simplify_file_path(subtitles)
+            if os.path.exists(subtitle):
+                os.rename(subtitle, simplify_file_path(subtitle))
+                subtitle = simplify_file_path(subtitle)
 
             else:
-                subtitles = ""
+                subtitle = ""
 
             command = FfmpegProgress(
                 [
@@ -465,7 +440,7 @@ class VideoAdjuster:
                     "-i",
                     input_file,
                     "-i",
-                    subtitles,
+                    subtitle,
                     "-map",
                     "0",
                     "-map",
@@ -483,16 +458,32 @@ class VideoAdjuster:
             progress_thread = self.thread_function(progress_bar_obj, command)
 
             Path(input_file).unlink(missing_ok=True)
-            Path(subtitles).unlink(missing_ok=True)
+            Path(subtitle).unlink(missing_ok=True)
 
             return_value = progress_thread.join()
 
-            if not return_value:
+            if not return_value or return_value == "error":
+                messagebox.showerror(
+                    translations["MessageBox"]["error"],
+                    message=message
+                    + "\n\n"
+                    + translations["MessageBox"]["error_ffmpeg_command"],
+                )
                 progress_bar_obj.root.destroy()
+                success = False
                 break
 
         if progress_bar_obj.root:
-            progress_bar_obj.root.destroy()
+            try:
+                progress_bar_obj.root.destroy()
+            except TclError:
+                pass
+
+        if success:
+            messagebox.showinfo(
+                translations["MessageBox"]["success"],
+                message=translations["MessageBox"]["success_message"],
+            )
 
 
 if __name__ == "__main__":
@@ -504,10 +495,6 @@ if __name__ == "__main__":
             videos.append(video)
 
     print(*videos, sep="\n")
-
-    progress_bar_obj_ = CustomProgressBar()
-
-    progress_bar_obj_.create_progress_bar()
 
     # total = len(videos)
 
