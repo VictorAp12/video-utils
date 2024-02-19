@@ -8,3 +8,4 @@ config autopytoexe.json
 config innosetup.iss
 innosetup
 teste.py
+app.__pycache__

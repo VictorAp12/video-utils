@@ -23,8 +23,8 @@ from utils.ffmpeg_utils import (
     is_video_or_audio_file,
 )
 
-language = load_last_used_settings()[0]
-translations = load_translations()[language]
+# language = load_last_used_settings()[0]
+# self.json_translations = load_translations()[language]
 
 
 def simplify_file_path(file_path: Path | str) -> str:
@@ -47,6 +47,8 @@ def encode_subtitle_to_utf8(file_path: Path | str) -> str | None:
     """
     file_path = str(file_path)
 
+    json_translations = load_translations()[load_last_used_settings()[0]]
+
     try:
         with open(file_path, "rb") as f:
             rawdata = f.read()
@@ -54,9 +56,9 @@ def encode_subtitle_to_utf8(file_path: Path | str) -> str | None:
             encoding = result["encoding"]
 
     except FileNotFoundError:
-        error_string = translations["MessageBox"]["error_subtitle_not_found"].format(
-            filename=Path(file_path).stem
-        )
+        error_string = json_translations["MessageBox"][
+            "error_subtitle_not_found"
+        ].format(filename=Path(file_path).stem)
         return error_string
 
     with open(file_path, "r", encoding=encoding) as f:
@@ -80,6 +82,8 @@ class VideoAdjuster:
         output_folder: Path | str = Path.cwd(),
         master: tk.Tk | tk.Toplevel | None = None,
     ) -> None:
+        self.json_translations = load_translations()[load_last_used_settings()[0]]
+
         self.input_files = [str(input_file) for input_file in input_files]
         self.output_folder = Path(output_folder)
 
@@ -148,7 +152,7 @@ class VideoAdjuster:
 
             filename = Path(input_file).name
 
-            message = translations["ProgressBar"]["converter_message"].format(
+            message = self.json_translations["ProgressBar"]["converter_message"].format(
                 filename=filename, current_file=i + 1, total_files=self.total_files
             )
 
@@ -207,8 +211,10 @@ class VideoAdjuster:
                 if output_file.endswith(".mp3"):
                     progress_bar_obj.root.destroy()
                     messagebox.showerror(
-                        translations["MessageBox"]["error"],
-                        message=translations["MessageBox"]["error_convert_video_mp3"],
+                        self.json_translations["MessageBox"]["error"],
+                        message=self.json_translations["MessageBox"][
+                            "error_convert_video_mp3"
+                        ],
                     )
                     success = False
                     return
@@ -248,10 +254,10 @@ class VideoAdjuster:
             if Path(output_file).exists():
                 progress_bar_obj.root.withdraw()
                 delete_file = messagebox.askyesno(
-                    translations["MessageBox"]["warning"],
-                    message=translations["MessageBox"]["output_file_exists"].format(
-                        output_file=Path(output_file).name
-                    ),
+                    self.json_translations["MessageBox"]["warning"],
+                    message=self.json_translations["MessageBox"][
+                        "output_file_exists"
+                    ].format(output_file=Path(output_file).name),
                     parent=progress_bar_obj.root,
                 )
 
@@ -279,10 +285,10 @@ class VideoAdjuster:
 
                     if not return_value or return_value == "error":
                         messagebox.showerror(
-                            translations["MessageBox"]["error"],
+                            self.json_translations["MessageBox"]["error"],
                             message=message
                             + "\n\n"
-                            + translations["MessageBox"]["error_ffmpeg_command"],
+                            + self.json_translations["MessageBox"]["error_ffmpeg_command"],
                         )
                         progress_bar_obj.root.destroy()
                         success = False
@@ -290,10 +296,10 @@ class VideoAdjuster:
 
                 else:
                     messagebox.showerror(
-                        translations["MessageBox"]["error"],
+                        self.json_translations["MessageBox"]["error"],
                         message=message
                         + "\n\n"
-                        + translations["MessageBox"]["error_ffmpeg_command"],
+                        + self.json_translations["MessageBox"]["error_ffmpeg_command"],
                     )
                     progress_bar_obj.root.destroy()
                     success = False
@@ -307,8 +313,8 @@ class VideoAdjuster:
 
         if success:
             messagebox.showinfo(
-                translations["MessageBox"]["success"],
-                message=translations["MessageBox"]["success_message"],
+                self.json_translations["MessageBox"]["success"],
+                message=self.json_translations["MessageBox"]["success_message"],
             )
 
     def change_video_title_to_filename(self) -> None:
@@ -329,7 +335,7 @@ class VideoAdjuster:
 
             temp_output_file = input_file.replace(filename, f"mod_{filename}")
 
-            message = translations["ProgressBar"]["change_title_message"].format(
+            message = self.json_translations["ProgressBar"]["change_title_message"].format(
                 filename=filename, current_file=i + 1, total_files=self.total_files
             )
 
@@ -357,10 +363,10 @@ class VideoAdjuster:
 
             if not return_value or return_value == "error":
                 messagebox.showerror(
-                    translations["MessageBox"]["error"],
+                    self.json_translations["MessageBox"]["error"],
                     message=message
                     + "\n\n"
-                    + translations["MessageBox"]["error_ffmpeg_command"],
+                    + self.json_translations["MessageBox"]["error_ffmpeg_command"],
                 )
                 progress_bar_obj.root.destroy()
                 success = False
@@ -374,8 +380,8 @@ class VideoAdjuster:
 
         if success:
             messagebox.showinfo(
-                translations["MessageBox"]["success"],
-                message=translations["MessageBox"]["success_message"],
+                self.json_translations["MessageBox"]["success"],
+                message=self.json_translations["MessageBox"]["success_message"],
             )
 
     def merge_video_to_subtitle(self, subtitle_language: str = "Pt-BR") -> None:
@@ -403,7 +409,9 @@ class VideoAdjuster:
             name = Path(input_file).stem
             filename = Path(input_file).name
 
-            message = translations["ProgressBar"]["merge_to_subtitle_message"].format(
+            message = self.json_translations["ProgressBar"][
+                "merge_to_subtitle_message"
+            ].format(
                 filename=filename, current_file=i + 1, total_files=self.total_files
             )
 
@@ -464,10 +472,10 @@ class VideoAdjuster:
 
             if not return_value or return_value == "error":
                 messagebox.showerror(
-                    translations["MessageBox"]["error"],
+                    self.json_translations["MessageBox"]["error"],
                     message=message
                     + "\n\n"
-                    + translations["MessageBox"]["error_ffmpeg_command"],
+                    + self.json_translations["MessageBox"]["error_ffmpeg_command"],
                 )
                 progress_bar_obj.root.destroy()
                 success = False
@@ -481,8 +489,8 @@ class VideoAdjuster:
 
         if success:
             messagebox.showinfo(
-                translations["MessageBox"]["success"],
-                message=translations["MessageBox"]["success_message"],
+                self.json_translations["MessageBox"]["success"],
+                message=self.json_translations["MessageBox"]["success_message"],
             )
 
 

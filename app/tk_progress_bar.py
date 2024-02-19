@@ -12,9 +12,6 @@ from utils.threading_utils import CustomThread
 from utils.json_utils import load_translations, load_last_used_settings
 from utils.window_utils import center_window
 
-language = load_last_used_settings()[0]
-translations = load_translations()[language]
-
 
 class CustomProgressBar:
     """
@@ -64,11 +61,13 @@ class CustomProgressBar:
 
         :return: None.
         """
+        self.json_translations = load_translations()[load_last_used_settings()[0]]
+
         self.master = master
 
         self.with_pause_button = with_pause_button
 
-        self.json_progress_bar = translations["ProgressBar"]
+        self.json_progress_bar = self.json_translations["ProgressBar"]
 
         if self.master:
             theme = ttk.Style(master)
