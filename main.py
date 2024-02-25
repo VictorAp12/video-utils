@@ -136,7 +136,7 @@ class VideoConverterApp(App):
             self.root,
             text=json_widgets["browse_output_button"],
         )
-        browse_output_button.grid(row=1, column=2, padx=5, pady=5)
+        browse_output_button.grid(row=1, column=2, padx=5, pady=5, sticky="w")
         browse_output_button.bind(
             "<Button-1>", lambda event: self.browse_folder(self.output_folder_entry)
         )

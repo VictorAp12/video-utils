@@ -2,10 +2,11 @@ venv
 __pycache__
 origin
 destiny
-explicacao.txt
 output
 config autopytoexe.json
 config innosetup.iss
 innosetup
 teste.py
 app.__pycache__
+utils.__pycache__
+video utils installer win 64.exe
