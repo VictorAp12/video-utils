@@ -61,5 +61,5 @@ Conteúdo:
 
   - Execute o main.py:
     ```bash
-    python -m mainy
+    python -m main
     ```
