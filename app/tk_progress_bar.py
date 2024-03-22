@@ -61,15 +61,13 @@ class CustomProgressBar:
 
         :return: None.
         """
-        self.json_translations = load_translations()[load_last_used_settings()[0]]
-
-        self.master = master
+        json_translations = load_translations()[load_last_used_settings()[0]]
 
         self.with_pause_button = with_pause_button
 
-        self.json_progress_bar = self.json_translations["ProgressBar"]
+        self._json_progress_bar = json_translations["ProgressBar"]
 
-        if self.master:
+        if master:
             theme = ttk.Style(master)
             self.root = tk.Toplevel(
                 master=master, bg=theme.lookup("TLabel", "background")
@@ -104,7 +102,7 @@ class CustomProgressBar:
 
         self.cancel_all_button = ttk.Button(
             self.root,
-            text=self.json_progress_bar["cancel_all_button"],
+            text=self._json_progress_bar["cancel_all_button"],
             command=self._set_cancel_all_true,
         )
 
@@ -142,7 +140,7 @@ class CustomProgressBar:
 
         self.root.bind("<Map>", self.on_map)
 
-    def on_unmap(self, event: tk.Event) -> None:  # pylint: disable=unused-argument
+    def on_unmap(self, _: tk.Event) -> None:
         """
         Function to minimize the progress bar when it is unmapped.
 
@@ -151,7 +149,7 @@ class CustomProgressBar:
         self.minimize.set(True)
         self.root.iconify()
 
-    def on_map(self, event: tk.Event) -> None:  # pylint: disable=unused-argument
+    def on_map(self, _: tk.Event) -> None:
         """
         Function to minimize the progress bar when it is unmapped.
 
@@ -160,13 +158,13 @@ class CustomProgressBar:
         self.minimize.set(False)
         self.root.deiconify()
 
-    def create_progress_bar(self) -> None:
+    def create_progress_bar(self, master: tk.Tk | tk.Toplevel | None = None) -> None:
         """
         Creates a progress bar and displays it on the screen.
 
         :return: None.
         """
-        self.root.title(self.json_progress_bar["ProgressBar_title"])
+        self.root.title(self._json_progress_bar["ProgressBar_title"])
 
         self.progress_bar_label.pack(side="top", anchor="nw")
 
@@ -180,14 +178,16 @@ class CustomProgressBar:
 
         self.cancel_all_button.pack(side="bottom", anchor="s")
 
-        center_window(self.root, self.master)
+        center_window(self.root, master)
 
         self.root.resizable(False, False)
 
         if self.with_pause_button:
             self.create_pause_button()
 
-    def set_label_text(self, text: str) -> None:
+    def set_label_text(
+        self, text: str, master: tk.Tk | tk.Toplevel | None = None
+    ) -> None:
         """
         Function to set the text of the progress bar label.
 
@@ -197,7 +197,7 @@ class CustomProgressBar:
         """
         self.progress_bar_label.config(text=text)
 
-        center_window(self.root, self.master)
+        center_window(self.root, master)
 
         self.root.resizable(False, False)
 
@@ -283,7 +283,7 @@ class CustomProgressBar:
                 self.root.after(10, self._update_progress, progress)
 
             else:
-                self.root.wait_variable(self.pause)  # Wait for self.paused to change
+                self.root.wait_variable(self.pause)
 
         self.root.quit()
 

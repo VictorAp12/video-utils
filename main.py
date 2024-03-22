@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 from typing import List, Literal
 import tkinter as tk
-from tkinter import messagebox, simpledialog, ttk, filedialog
+from tkinter import messagebox, simpledialog, ttk
 
 from app.App import App
 from app.tooltips import ToolTip
@@ -138,7 +138,7 @@ class VideoConverterApp(App):
         )
         browse_output_button.grid(row=1, column=2, padx=5, pady=5, sticky="w")
         browse_output_button.bind(
-            "<Button-1>", lambda event: self.browse_folder(self.output_folder_entry)
+            "<Button-1>", lambda _: self.browse_folder(self.output_folder_entry)
         )
 
     def create_input_extension_entry(self) -> None:
@@ -340,6 +340,7 @@ class VideoConverterApp(App):
                 self.json_translations["MessageBox"]["error_files_not_found"],
             )
             return
+
         if len(input_files) > 50:
             messagebox.showinfo(
                 self.json_translations["MessageBox"]["info"],
@@ -536,20 +537,6 @@ class ChangeVideoAttributesApp(App):
             extract_subtitles_button,
             self.json_translations["Tooltips"]["extract_button_tooltip"],
         )
-
-    def browse_folder(self, folder_entry: tk.Entry) -> None:
-        """
-        Function to browse the folder and update the folder_entry
-        with the selected folder path. No parameters and no return type.
-
-        :param folder_entry: The entry widget to update with the selected folder path.
-
-        :return: None.
-        """
-
-        folder = filedialog.askdirectory(mustexist=True)
-        folder_entry.delete(0, tk.END)
-        folder_entry.insert(0, folder)
 
     def execute_function(
         self,

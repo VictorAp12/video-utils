@@ -1,6 +1,7 @@
 """
 This module contains the base class for the application window.
 """
+
 import os
 import sys
 from abc import ABC, abstractmethod
@@ -21,7 +22,7 @@ from utils.json_utils import (
 
 from utils.window_utils import center_window
 
-# Load translations
+
 translations = load_translations()
 
 
@@ -56,9 +57,8 @@ class App(ABC):
         self.root.title(title)
         self.root.iconbitmap("assets/video-util.ico")
         self.root.resizable(False, False)
-        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
+        self.root.protocol("WM_DELETE_WINDOW", self._on_closing)
 
-        # make the window responsive
         self.root.grid_rowconfigure(0, weight=1)
         self.root.grid_columnconfigure(0, weight=1)
 
@@ -67,7 +67,7 @@ class App(ABC):
         self.create_input_folder_entry()
 
         self.selected_files = 0
-        self.setup_treeview()
+        self._setup_treeview()
 
     @abstractmethod
     def create_menu_bar(self) -> Tuple[tk.Menu, tk.Menu]:
@@ -155,7 +155,6 @@ class App(ABC):
 
         center_window(self.root)
 
-        # update user settings
         save_last_used_settings(
             "last_used_theme",
             theme=theme,
@@ -210,7 +209,7 @@ class App(ABC):
         )
         browse_input_button.grid(row=0, column=2, padx=5, pady=5, sticky="w")
         browse_input_button.bind(
-            "<Button-1>", lambda event: self.browse_folder(self.input_folder_entry)
+            "<Button-1>", lambda _: self.browse_folder(self.input_folder_entry)
         )
 
     def browse_folder(self, folder_entry: tk.Entry) -> None:
@@ -226,7 +225,7 @@ class App(ABC):
         folder_entry.delete(0, tk.END)
         folder_entry.insert(0, folder)
 
-    def open_folder(self) -> None:
+    def _open_folder(self) -> None:
         """
         Opens the input folder.
 
@@ -237,19 +236,17 @@ class App(ABC):
 
         os.startfile(self.input_folder_entry.get())
 
-    def setup_treeview(self) -> None:
+    def _setup_treeview(self) -> None:
         """
         Sets up the treeview widget.
 
         :return: None.
         """
-        # table
+
         self.treeview = ttk.Treeview(self.root, columns=(1,))
 
-        # table scrollbar
         self.scrollbar = ttk.Scrollbar(self.root, command=self.treeview.yview)
 
-        # treeview images
         self.checked_image = ImageTk.PhotoImage(
             Image.open("assets/checked-checkbox.png").resize((20, 20))
         )
@@ -257,27 +254,22 @@ class App(ABC):
             Image.open("assets/blank-check-box.png").resize((20, 20))
         )
 
-        # select all items from treeview
         self.select_all = tk.BooleanVar()
 
-        # select all button
         self.select_all_button = ttk.Button(
             self.root,
             text=self.json_translations["Widgets"]["unselect_all_button"],
-            command=self.select_all_rows,
+            command=self._select_all_rows,
         )
 
-        # open folder button
         self.open_folder_button = ttk.Button(
             self.root,
             text=self.json_translations["Widgets"]["open_folder_button"],
-            command=self.open_folder,
+            command=self._open_folder,
         )
 
-        # found files
         self.found_files_label = ttk.Label(self.root, text="")
 
-        # selected files
         self.selected_files_label = ttk.Label(self.root, text="")
 
     def create_treeview(self, files: List[Path]) -> None:
@@ -294,9 +286,9 @@ class App(ABC):
 
         self.treeview.tag_configure("checked", image=self.checked_image)
         self.treeview.tag_configure("unchecked", image=self.unchecked_image)
-        self.treeview.bind("<Button 1>", self.toggle_check)
+        self.treeview.bind("<Button 1>", self._toggle_check)
 
-        self.treeview.heading("#0", text="", command=self.select_all_rows)
+        self.treeview.heading("#0", text="", command=self._select_all_rows)
         self.treeview.column(
             "#0", width=50, minwidth=50, anchor="center", stretch=False
         )
@@ -336,7 +328,7 @@ class App(ABC):
 
         center_window(self.root)
 
-    def toggle_check(self, event: tk.Event) -> None:
+    def _toggle_check(self, event: tk.Event) -> None:
         """
         A function to toggle the check status of a row in the treeview widget.
 
@@ -374,7 +366,7 @@ class App(ABC):
         except IndexError:
             pass
 
-    def select_all_rows(self) -> None:
+    def _select_all_rows(self) -> None:
         """
         A function to select all rows in the treeview widget.
 
@@ -444,7 +436,7 @@ class App(ABC):
 
         return input_files
 
-    def on_closing(self) -> None:
+    def _on_closing(self) -> None:
         """
         Function to close the window.
 

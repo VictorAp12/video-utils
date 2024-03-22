@@ -121,7 +121,7 @@ class VideoAdjuster:
         progress_bar_obj = CustomProgressBar(
             master=self.master, with_pause_button=False
         )
-        progress_bar_obj.create_progress_bar()
+        progress_bar_obj.create_progress_bar(self.master)
 
         return progress_bar_obj
 
@@ -156,7 +156,7 @@ class VideoAdjuster:
                 filename=filename, current_file=i + 1, total_files=self.total_files
             )
 
-            progress_bar_obj.set_label_text(message)
+            progress_bar_obj.set_label_text(message, self.master)
 
             if conversion_type == "audio":
                 if not output_file.endswith(".mp3"):
@@ -288,7 +288,9 @@ class VideoAdjuster:
                             self.json_translations["MessageBox"]["error"],
                             message=message
                             + "\n\n"
-                            + self.json_translations["MessageBox"]["error_ffmpeg_command"],
+                            + self.json_translations["MessageBox"][
+                                "error_ffmpeg_command"
+                            ],
                         )
                         progress_bar_obj.root.destroy()
                         success = False
@@ -335,11 +337,13 @@ class VideoAdjuster:
 
             temp_output_file = input_file.replace(filename, f"mod_{filename}")
 
-            message = self.json_translations["ProgressBar"]["change_title_message"].format(
+            message = self.json_translations["ProgressBar"][
+                "change_title_message"
+            ].format(
                 filename=filename, current_file=i + 1, total_files=self.total_files
             )
 
-            progress_bar_obj.set_label_text(message)
+            progress_bar_obj.set_label_text(message, self.master)
 
             command = FfmpegProgress(
                 [
@@ -415,7 +419,7 @@ class VideoAdjuster:
                 filename=filename, current_file=i + 1, total_files=self.total_files
             )
 
-            progress_bar_obj.set_label_text(message)
+            progress_bar_obj.set_label_text(message, self.master)
 
             # output file will be like "video.srt.mkv"
             merged = (

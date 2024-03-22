@@ -37,11 +37,9 @@ class ToolTip:
             label.pack()
             self.tool_tip.update()
 
-        def on_leave(event: tk.Event) -> None:  # pylint: disable=unused-argument
+        def on_leave(_: tk.Event) -> None:
             """
             Closes the tooltip.
-
-            :param event (tk.Event): The event that triggered the function.
 
             :return: None.
             """

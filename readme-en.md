@@ -59,5 +59,5 @@ Contents:
 
   - Run the main.py:
     ```bash
-    python -m main.py
+    python -m main
     ```
