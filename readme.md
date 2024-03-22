@@ -33,7 +33,7 @@ Por fim o botão "Extrair Legenda de Vídeo" extrai todas as faixas de legendas 
 
 Conteúdo:
 - [Requisitos](#requisitos)
-- [Instalação](#instalacao)
+- [Instalação](#instalação)
 
 
 ## Requisitos
