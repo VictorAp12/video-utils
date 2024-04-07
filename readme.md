@@ -38,9 +38,15 @@ Conteúdo:
 
 ## Requisitos
 - Python 3.8 ou acima
-- ffmpeg v3.1 ou acima. Link: http://ffmpeg.org/ instalado no seu $PATH
+- ffmpeg v3.1 ou acima. Link: http://ffmpeg.org/ instalado no seu $PATH, se não estiver nas variáveis de sistema não vai funcionar, veja um tutorial de como colocar o ffmpeg no Path do seu sistema
 
 ## Instalação
+
+  ### Como executável do windows
+
+  Simplesmente baixe o arquivo.exe através deste link e comece a usar a aplicação (Para windows 64 bits, é recomendado o windows 11): [Download Video Utils](https://github.com/VictorAp12/video-utils/raw/main/Video%20Utils%20installer%2064%20bits.exe)
+
+  ### Como um projeto Python
 
   - Baixe o projeto como zip ou usando gitclone https://github.com/VictorAp12/video-utils.git
 
